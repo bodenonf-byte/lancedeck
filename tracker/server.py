@@ -90,7 +90,10 @@ class Service:
                 self.stats["panel_frames"] += 1; self.stats["panel_ms"] = ms
             if raw.kind != "none" or raw.map or self.state is None:
                 self.state = st; self.version += 1
-        if full and raw.kind == "scoreboard" and (raw.result or raw.note == "end table") and (st.mine or st.enemy):
+        # a record needs the real results screen: a VICTORY/DEFEAT read, or a scored table with
+        # most pilots carrying a match score — never a mid-match TAB
+        scored = sum(1 for s_ in st.mine + st.enemy if s_.score is not None)
+        if full and raw.kind == "scoreboard" and (raw.result or (raw.note == "end table" and scored >= 12)) and (st.mine or st.enemy):
             self._record(img, st)
         return st
 
