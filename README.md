@@ -31,16 +31,16 @@ first run and are never redistributed with this app.
 ## Install
 
 1. Download the latest release zip and unpack it anywhere.
-2. Run `LanceDeck.exe`. A console window opens and the setup page appears in your browser.
+2. Run `LanceDeck.exe`. An icon appears in the system tray and the setup page opens in your browser.
 3. Type your pilot name as it shows in game, check the game folder, click **Save & import**.
    The mech icons and map art are copied from your game files and the mechs are cut out of
    their backdrop (a few minutes, once).
 4. Play. Keep the page on a second screen or open `http://<this-pc>:8765` on a phone.
 
-**Every time after that**: run `LanceDeck.exe` before you drop. A black console window opens and
-the page appears in your browser by itself at `http://localhost:8765`. Minimise the console,
-do not close it: closing it stops the tracker. To stop, close it or press Ctrl+C in it. A
-shortcut to the exe on the desktop or in the Start menu is the convenient way.
+**Every time after that**: run `LanceDeck.exe` before you drop. It sits in the system tray, the
+icon next to the clock, and the page opens in your browser by itself at `http://localhost:8765`.
+Right-click the icon for Open, Setup, Calibrate and Quit. Running it a second time just opens
+the page. A shortcut to the exe on the desktop or in the Start menu is the convenient way.
 
 If Windows SmartScreen shows "Windows protected your PC", click **More info** then **Run anyway**: releases are being moved to builds signed through SignPath Foundation (docs/SIGNPATH.md); until then the warning only means Windows does not know the publisher yet.
 

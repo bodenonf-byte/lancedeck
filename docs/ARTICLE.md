@@ -100,8 +100,8 @@ again their mech shows up as a supposition before you have even seen it.
 
 ## Getting it
 
-Download the zip, unpack it, run `LanceDeck.exe`. The setup page opens in your browser: type
-your pilot name, confirm the game folder, click import. A few minutes later, while it cuts the
+Download the zip, unpack it, run `LanceDeck.exe`. It sits in the system tray and the setup page
+opens in your browser: type your pilot name, confirm the game folder, click import. A few minutes later, while it cuts the
 mechs out of their hangar backdrops, you are ready to drop.
 
 LanceDeck is free. If it helps you win, there is a Support button in the app. Donations pay for

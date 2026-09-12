@@ -26,10 +26,10 @@ jobs:
       - name: Build
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --name LanceDeck --onedir --console `
+          python -m PyInstaller --noconfirm --clean --name LanceDeck --onedir --windowed `
             --add-data "web;web" --add-data "data;data" --add-data "tools;tools" --add-data "tracker\config.default.json;tracker" `
             --collect-all rapidocr_onnxruntime --collect-all onnxruntime --collect-all dxcam `
-            --hidden-import tracker.server --hidden-import tracker.paths --hidden-import tools.import_game_icons --hidden-import tools.import_game_maps --hidden-import tools.cut_mech_icons `
+            --hidden-import pystray._win32 --hidden-import tracker.server --hidden-import tracker.paths --hidden-import tools.import_game_icons --hidden-import tools.import_game_maps --hidden-import tools.cut_mech_icons `
             --hidden-import uvicorn.logging --hidden-import uvicorn.loops.auto --hidden-import uvicorn.protocols.http.auto --hidden-import uvicorn.protocols.websockets.auto --hidden-import uvicorn.lifespan.on `
             run_app.py
           Copy-Item README.md, LICENSE dist\LanceDeck\
