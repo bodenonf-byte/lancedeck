@@ -585,6 +585,47 @@ def target_panel(lines: list[Line], img: Image.Image, db: MechDB) -> TeamState:
     return TeamState("target", [], [sl], "target", time.time(), img.width, img.height, "")
 
 
+_NAME_OFFSET = [1.25]     # how far above its code a lance mate's name sits, in row pitches (learnt)
+_ROW_PITCH = [22.0]       # the panel's row pitch in pixels, learnt from a panel with three codes or more
+
+
+def _pair_names(codes: list, names: list) -> None:
+    """Give each code row its pilot by POSITION, not by order.
+
+    The panel's name column sits about one row and a quarter above the code column, so the
+    name for a code is the one whose y is closest to code_y - offset.  Pairing by order
+    (2026-09-12) flipped a whole lance whenever OCR dropped one name for a tick: with three
+    names for four codes every mate slid up one seat — the dead Raven's pilot was revived
+    in the Shadow Cat, the Shadow Cat's pilot died in the Raven, and back again next tick.
+    The offset is learnt each time a full panel reads cleanly and kept for the partial ones.
+    A code whose name is missing stays nameless: the roster matches it by mech."""
+    if not codes or not names:
+        return
+    ys = [c[0] for c in codes]
+    gaps = [b - a for a, b in zip(ys, ys[1:]) if b - a > 4]
+    # the row pitch is the SMALLEST gap: a dropped code doubles a gap, never halves one
+    pitch = min(gaps) if gaps else _ROW_PITCH[0]
+    if len(codes) >= 3:
+        _ROW_PITCH[0] = pitch
+    if len(names) == len(codes) and len(codes) >= 2:
+        ratio = sorted((c[0] - n[0]) / pitch for c, n in zip(codes, names))[len(codes) // 2]
+        if 0.5 <= ratio <= 2.0:
+            _NAME_OFFSET[0] = ratio
+    off = _NAME_OFFSET[0] * pitch
+    taken: set[int] = set()
+    for cy, _, slot in codes:
+        want = cy - off
+        best = None; best_d = pitch * 0.55                     # closer than half a row, or nothing
+        for i, (ny, _) in enumerate(names):
+            if i in taken:
+                continue
+            d = abs(ny - want)
+            if d < best_d:
+                best, best_d = i, d
+        if best is not None:
+            taken.add(best); slot.pilot = names[best][1]
+
+
 def lance_panel(rows, texts, lines, img, db, hud_header, bx0, bx1, source) -> TeamState:
     """The four lance mates: names in the left column, codes with DEAD / health beside them,
     paired by order."""
@@ -629,8 +670,10 @@ def lance_panel(rows, texts, lines, img, db, hud_header, bx0, bx1, source) -> Te
                     status = "ALIVE"                          # inside the panel a code is a mate even when its state failed to read
                 else:
                     continue                                  # a code without a state word elsewhere is not the panel
-            codes.append((cy, l.x0, Slot("?", ch.code, variant, ch.name, ch.tons, ch.cls, ch.faction, ch.pros, ch.cons,
-                                          status != "DEAD", status, health, lance, br, c0 * l.conf, cy, up)))
+            # the code LINE's own y, not the row's: a baseline grouping can chain two code lines
+            # into one row through the names between them, and both codes then share a y
+            codes.append((l.cy, l.x0, Slot("?", ch.code, variant, ch.name, ch.tons, ch.cls, ch.faction, ch.pros, ch.cons,
+                                             status != "DEAD", status, health, lance, br, c0 * l.conf, int(l.cy), up)))
     friends, foes = q_tags(rows, texts, tag_rows, img, db)
     if not codes:
         if friends or foes:
@@ -656,9 +699,7 @@ def lance_panel(rows, texts, lines, img, db, hud_header, bx0, bx1, source) -> Te
         if len(pilot) >= 2:
             names.append((l.cy, pilot))
     names.sort()
-    for i, (_, _, slot) in enumerate(codes):
-        if i < len(names):
-            slot.pilot = names[i][1]
+    _pair_names(codes, names)
     note = "" if len(names) == len(codes) else f"lance panel: {len(codes)} mechs, {len(names)} names read"
     # enemy sightings: a code on the HUD that is not a lance mate — the target readout when
     # you lock an enemy. If a pilot name sits on a neighbouring row of that readout it is
