@@ -1,4 +1,4 @@
-﻿"""Where things live, in a checkout and in the packaged app.
+"""Where things live, in a checkout and in the packaged app.
 
 RES   bundled, read-only: web/, data/, tools/, the default config
 ROOT  writable, next to the executable (or the checkout): config.json, assets/, records/,
