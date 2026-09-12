@@ -509,6 +509,15 @@ async def ws(sock: WebSocket):
         pass
 
 
+@app.middleware("http")
+async def _no_stale_static(request, call_next):
+    """Browsers must revalidate the page's files on every load, so a fix shows up at once."""
+    resp = await call_next(request)
+    if request.url.path.startswith(("/static/", "/records/")) or request.url.path in ("/", "/setup", "/calib"):
+        resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
 os.makedirs(RECORDS, exist_ok=True)
 app.mount("/records", StaticFiles(directory=RECORDS), name="records")
 app.mount("/assets", StaticFiles(directory=ASSETS), name="assets")

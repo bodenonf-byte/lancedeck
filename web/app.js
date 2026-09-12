@@ -365,12 +365,11 @@ async function loadRecords() {
           <a class="shot" href="${r.image || "#"}" target="_blank" title="open the full screen">${r.image ? `<img src="${r.image}?v=${r.saved || 0}" alt="">` : '<div class="noshot">no screen kept</div>'}
             <span class="res">${r.result || "MATCH"}</span></a>
           <div class="recbody">
-            <div class="rechead"><b>${escapeHtml(r.map || "unknown map")}</b><span>${escapeHtml(r.mode || "")}</span><time>${fmtDate(r.started || r.saved)}</time></div>
+            <div class="rechead"><b>${escapeHtml(r.map || "unknown map")}</b><span>${escapeHtml(r.mode || "")}</span><time>${fmtDate(r.started || r.saved)}</time>
+              <button class="recboard" data-id="${r.match_id}">BOARD ▾</button><button class="recdel" data-id="${r.match_id}" title="delete this record">✕</button></div>
             <div class="recscore"><span class="mine">${r.mine_alive}/${r.mine}</span> alive <em>vs</em> <span class="foe">${r.enemy_alive}/${r.enemy}</span></div>
             ${r.me ? `<div class="recme">${r.me.code ? escapeHtml(r.me.name) + " " + r.me.code + (r.me.variant ? "-" + escapeHtml(r.me.variant) : "") : "mech not shown"}${r.me.score != null ? ` · score ${r.me.score}` : ""}${r.me.medal ? " " + MEDAL[r.me.medal] : ""}${r.me.alive ? "" : " · destroyed"}</div>` : ""}
             <ul class="recmedals">${(r.medals || []).map(m => `<li><i>${MEDAL[m.medal]}</i><b class="${m.side}">${escapeHtml(m.pilot)}</b><span>${m.code ? escapeHtml(m.name || "") + " " + m.code + (m.variant ? "-" + escapeHtml(m.variant) : "") : ""}</span><em>${m.score != null ? m.score : ""}</em></li>`).join("") || '<li class="none">no scores read</li>'}</ul>
-            <button class="recboard" data-id="${r.match_id}">BOARD ▾</button>
-            <button class="recdel" data-id="${r.match_id}" title="delete this record">✕</button>
           </div>
           <div class="recteams" id="rb-${r.match_id}" hidden></div>
         </article>`).join("")}</div>`).join("") : '<div class="empty">The final screen of each match is kept here once the results table has been read. Stay on the results screen a couple of seconds at the end of a match.</div>';

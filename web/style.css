@@ -529,3 +529,9 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 /* records: keep the date clear of the BOARD and delete buttons */
 .recbody { padding-right: 128px; }
 .rechead time { white-space: nowrap; }
+
+/* records: the buttons live in the header row, after the date */
+.recbody { padding-right: 12px; }
+.rechead { align-items: center; }
+.rec .recboard, .rec .recdel { position: static; margin-left: 6px; flex: none; }
+.rechead time { margin-left: auto; }
