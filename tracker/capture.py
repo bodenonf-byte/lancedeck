@@ -26,6 +26,10 @@ class Grabber:
         self.backend_now = "window"
         self._screen_until = 0.0
         self.hung_at = 0.0               # when a dxcam grab last hung (dxcam is then retired)
+        self.stale_at = 0.0              # when the window surface was last found frozen (same pixels for a while)
+        self._win_sig = None             # signature of the last window-surface grab, and when it last CHANGED
+        self._win_sig_at = 0.0
+        self._dx_ok_at = 0.0             # when dxcam last delivered a frame
         self.game: window.GameWindow | None = None
         self.mon_rect: tuple[int, int, int, int] | None = None
         self.win_rect: tuple[int, int, int, int] | None = None
@@ -83,6 +87,13 @@ class Grabber:
         return self.cams.get(0)
 
     DX_GRAB_TIMEOUT = 1.5
+    DX_QUIET = 2.0            # s without a dxcam frame before the screen is copied with mss instead
+    STALE_AFTER = 1.0         # s of identical window-surface pixels = the surface is frozen
+
+    @staticmethod
+    def _signature(img: Image.Image) -> bytes:
+        """A few hundred bytes that change whenever the picture does."""
+        return img.convert("L").resize((48, 27)).tobytes()
 
     def _dx_grab(self, cam, box):
         """One dxcam grab, bounded in time.
@@ -125,7 +136,7 @@ class Grabber:
     def describe(self) -> dict:
         return {"backend": self.backend_now, "monitor": self.mon_index, "monitor_rect": self.mon_rect,
                 "window": self.game.title if self.game else None, "window_rect": self.win_rect,
-                "dxcam_hung_at": self.hung_at}
+                "dxcam_hung_at": self.hung_at, "window_stale_at": self.stale_at}
 
     # ── grab ─────────────────────────────────────────────────────────────────
     def grab(self, region: tuple[float, float, float, float] | None = None) -> Image.Image | None:
@@ -140,16 +151,32 @@ class Grabber:
         m = self.mon_rect; w = self.win_rect
         if m is None or w is None:
             return None
-        if self.game is not None and self.window_mode and time.time() >= self._screen_until:
+        now = time.time()
+        if self.game is not None and self.window_mode and now >= self._screen_until:
             try:
                 from . import wincap
                 img = wincap.grab_window(self.game.hwnd, region)
             except Exception:
                 img = None
             if img is not None and not wincap.looks_black(img):
-                self.backend_now = "window"
-                return img
-            self._screen_until = time.time() + 10.0     # black or failed: exclusive fullscreen, use the screen for a while
+                # An exclusive-fullscreen game has no live surface for the DWM: PrintWindow then
+                # hands back the LAST picture it composed, over and over (2026-09-12: the same
+                # spectator frame with the same kill feed for four minutes, OCR'd every tick as
+                # if it were new).  A game never draws the same pixels twice for a whole second,
+                # so a surface that has not changed for STALE_AFTER is frozen: read the screen.
+                sig = self._signature(img)
+                if sig != self._win_sig:
+                    self._win_sig, self._win_sig_at = sig, now
+                if now - self._win_sig_at < self.STALE_AFTER:
+                    self.backend_now = "window"
+                    return img
+                self.stale_at = now
+            self._screen_until = now + 10.0             # black, failed or frozen: exclusive fullscreen, use the screen for a while
+        # the screen shows the game only while the game is the window in front; otherwise the
+        # desktop (a browser, this chat) would be OCR'd into the roster.  Read nothing then.
+        if self.game is not None and not window.is_foreground(self.game.hwnd):
+            self.backend_now = "none"
+            return None
         self.backend_now = self.backend
         if region is None:
             box = (w[0] - m[0], w[1] - m[1], w[2] - m[0], w[3] - m[1])
@@ -164,9 +191,12 @@ class Grabber:
             if cam is not None:
                 arr = self._dx_grab(cam, box)
                 if arr is not None:
+                    self._dx_ok_at = time.time()
                     return Image.fromarray(arr)
-                if self.backend == "dxcam":
+                if self.backend == "dxcam" and time.time() - self._dx_ok_at < self.DX_QUIET:
                     return None                     # no new frame: the picture has not changed
+                # nothing from dxcam for a while (Desktop Duplication in "access lost" recovery
+                # after a mode switch — it can stay there for minutes): the plain screen copy
             mon = {"left": m[0] + box[0], "top": m[1] + box[1], "width": box[2] - box[0], "height": box[3] - box[1]}
             shot = self.sct.grab(mon)
             return Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")

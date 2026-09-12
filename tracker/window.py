@@ -32,6 +32,15 @@ class GameWindow:
     monitor_index: int                     # 1-based, in EnumDisplayMonitors order (primary first when it is first)
 
 
+def is_foreground(hwnd: int) -> bool:
+    """Is this the window in front (the one with the keyboard)?  The screen shows the game
+    only then; an exclusive-fullscreen game that lost the front is minimised anyway."""
+    try:
+        return int(user32.GetForegroundWindow()) == int(hwnd)
+    except Exception:
+        return False
+
+
 def _monitors() -> list[tuple[int, int, int, int]]:
     mons: list[tuple[int, int, int, int]] = []
     MonitorEnumProc = ctypes.WINFUNCTYPE(ctypes.c_int, wt.HMONITOR, wt.HDC, ctypes.POINTER(wt.RECT), wt.LPARAM)
