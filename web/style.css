@@ -565,3 +565,7 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .mm-matches span.defeat { color: #f0a59a; border-color: color-mix(in srgb, var(--red) 50%, transparent); }
 .mymech .pros { color: var(--green); font-size: 11px; } .mymech .cons { color: #f0a59a; font-size: 11px; }
 :root[data-theme="normal"] .mymech { background: rgba(255,255,255,.9); } :root[data-theme="normal"] .mm-head b, :root[data-theme="normal"] .mm-stats b { color: #1a2230; }
+
+.mm-stats { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
+.mm-stats b.medals { font-size: 13px; letter-spacing: 0; }
+.mymech { overflow: hidden; }
