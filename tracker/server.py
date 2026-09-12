@@ -61,6 +61,14 @@ class Service:
         # ~60 ms and a full 3440x1440 read ~250 ms, so the panel loop barely notices
         self.reader = Reader(use_dml=dml, threads=int(self.cfg.get('ocr_threads', 4)))
         self.ocr_lock = threading.Lock()
+        # on the CPU the corners get a reader of their own, so a slow full-frame read never
+        # holds up a death or a health bar; on the GPU one engine is shared (two DirectML
+        # sessions crash the device)
+        if self.reader.backend == "dml":
+            self.reader_panel, self.panel_lock = self.reader, self.ocr_lock
+        else:
+            self.reader_panel = Reader(use_dml=False, threads=max(1, int(self.cfg.get("ocr_threads_panel", 2))))
+            self.panel_lock = threading.Lock()
         self.grabber = Grabber(int(self.cfg.get("monitor", 1)))
         self.state: TeamState | None = None
         self.last_frame: Image.Image | None = None
@@ -186,8 +194,8 @@ class Service:
         """The top-right target info panel: the locked mech's variant and weapons."""
         from .match import target_panel
         t0 = time.time()
-        with self.ocr_lock:
-            lines = self.reader.read(img, 1.0)
+        with self.panel_lock:
+            lines = self.reader_panel.read(img, 1.0)
         raw = target_panel(lines, img, self.db)
         if raw.kind == "target":
             with self.lock:
@@ -197,8 +205,8 @@ class Service:
 
     def analyse_panel(self, img: Image.Image):
         t0 = time.time()
-        with self.ocr_lock:
-            lines = self.reader.read(img, 1.0)
+        with self.panel_lock:
+            lines = self.reader_panel.read(img, 1.0)
         raw = build(lines, img, self.db, self.cfg, "panel")
         if raw.kind != "hud":                              # the corner holds nothing but the panel; anything else is noise
             raw = TeamState("none", [], [], "panel", time.time(), img.width, img.height, "")
