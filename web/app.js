@@ -88,7 +88,7 @@ function isMe(s) {
 const LANCES = [
   {key: "ALPHA", name: "ALPHA LANCE", emblem: "🐺", motto: "“HOLD THE LINE”", tone: "alpha"},
   {key: "BRAVO", name: "BRAVO LANCE", emblem: "🦅", motto: "“FIRE AND MANEUVER”", tone: "bravo"},
-  {key: "CHARLIE", name: "CHARLIE LANCE", emblem: "🐮", motto: "“EYES EVERYWHERE”", tone: "charlie"},
+  {key: "CHARLIE", name: "CHARLIE LANCE", emblem: '<svg viewBox="0 0 64 64"><path d="M21 28C9 27 2 18 4 4c4 10 9 16 19 18z"/><path d="M43 28c12-1 19-10 17-24-4 10-9 16-19 18z"/><path d="M22 20h20c6 1 10 7 9 16l-3 9c-3 9-8 15-16 15S19 54 16 45l-3-9c-1-9 3-15 9-16z"/><path class="cut" d="M18 33l12 4-2 5zM46 33l-12 4 2 5zM23 50a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0-6.4 0zM34.6 50a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0-6.4 0zM29 26l3 6 3-6z"/></svg>', motto: "“EYES EVERYWHERE”", tone: "charlie"},
 ];
 const CLASS_ICON = {Light: "▲", Medium: "◆", Heavy: "⬢", Assault: "⬟", Unknown: "?"};
 function seatLances(slots) {
