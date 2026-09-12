@@ -297,9 +297,10 @@ def build(lines: list[Line], img: Image.Image, db: MechDB, cfg: dict, source: st
             s_.medal = 0
             if not scored_screen:
                 s_.score = None
-        if scored_screen:
-            for i, s_ in enumerate(sorted([s_ for s_ in mine + enemy if s_.score is not None], key=lambda x: -x.score)[:3]):
-                s_.medal = i + 1
+        if scored_screen:                                  # gold, silver, bronze on EACH team
+            for side in (mine, enemy):
+                for i, s_ in enumerate(sorted([s_ for s_ in side if s_.score is not None], key=lambda x: -x.score)[:3]):
+                    s_.medal = i + 1
         st = TeamState("scoreboard", mine, enemy, source, time.time(), img.width, img.height,
                        ("end table" if scored_screen else "") if mine else "scoreboard seen but no mech codes read")
         st.result = result; st.map = map_name; st.mode = mode
@@ -364,9 +365,8 @@ def build(lines: list[Line], img: Image.Image, db: MechDB, cfg: dict, source: st
             result = a.result or b.result
             for s in mine + enemy:
                 s.medal = 0; s.lance = ""
-            scored = [s for s in mine + enemy if s.score is not None]
-            if scored:                                       # the medals rank both tables together
-                for i, s in enumerate(sorted(scored, key=lambda s: -s.score)[:3]):
+            for side in (mine, enemy):                       # gold, silver, bronze on EACH team
+                for i, s in enumerate(sorted([s for s in side if s.score is not None], key=lambda s: -s.score)[:3]):
                     s.medal = i + 1
             st = TeamState("scoreboard", mine, enemy, source, time.time(), img.width, img.height, "end table")
             st.result = result; st.map = map_name; st.mode = mode
@@ -523,9 +523,9 @@ def scoreboard(rows, texts, img, db, my_name, bx0, bx1, source, scored: bool | N
     if scored is not None:
         has_score_column = scored                          # decided by the caller for the whole screen
     if result or has_score_column:
-        ranked = sorted([s for s in mine + enemy if s.score is not None], key=lambda s: -s.score)
-        for i, s in enumerate(ranked[:3]):
-            s.medal = i + 1
+        for side in (mine, enemy):                             # gold, silver, bronze on EACH team
+            for i, s in enumerate(sorted([s for s in side if s.score is not None], key=lambda s: -s.score)[:3]):
+                s.medal = i + 1
     else:
         for s in mine + enemy:
             s.score = None                                  # the in-match TAB's first number is the ping

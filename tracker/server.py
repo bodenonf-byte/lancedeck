@@ -438,13 +438,13 @@ def records():
             except Exception:
                 continue
             mid = f[:-5]
-            top = sorted([s for s in d.get("mine", []) + d.get("enemy", []) if s.get("medal")], key=lambda s: s["medal"])
+            top = sorted([s for s in d.get("mine", []) if s.get("medal")], key=lambda s: s["medal"]) + sorted([s for s in d.get("enemy", []) if s.get("medal")], key=lambda s: s["medal"])
             out.append({"match_id": mid, "image": f"/records/{mid}.jpg" if os.path.exists(os.path.join(RECORDS, mid + ".jpg")) else None,
                         "map": d.get("map", ""), "mode": d.get("mode", ""), "result": d.get("result", ""), "saved": d.get("saved"), "started": d.get("started"),
                         "mine": len(d.get("mine", [])), "enemy": len(d.get("enemy", [])),
                         "mine_alive": sum(1 for s in d.get("mine", []) if s.get("alive")), "enemy_alive": sum(1 for s in d.get("enemy", []) if s.get("alive")),
                         "medals": [{"medal": s["medal"], "pilot": s["pilot"], "name": s.get("name"), "code": s.get("code"), "variant": s.get("variant"), "score": s.get("score"),
-                                    "side": "mine" if s in d.get("mine", []) else "enemy"} for s in top[:3]],
+                                    "side": "mine" if s in d.get("mine", []) else "enemy"} for s in top[:6]],
                         "me": next((s for s in d.get("mine", []) if svc and svc.cfg.get("my_name") and svc.cfg["my_name"].lower().replace(" ", "") in (s.get("pilot") or "").lower().replace(" ", "")), None)})
     return out
 
