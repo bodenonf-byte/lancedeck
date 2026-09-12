@@ -25,6 +25,7 @@ class Grabber:
         self.window_mode = True          # capture the window's own surface; False = always the screen region
         self.backend_now = "window"
         self._screen_until = 0.0
+        self.hung_at = 0.0               # when a dxcam grab last hung (dxcam is then retired)
         self.game: window.GameWindow | None = None
         self.mon_rect: tuple[int, int, int, int] | None = None
         self.win_rect: tuple[int, int, int, int] | None = None
@@ -81,13 +82,50 @@ class Grabber:
                 break
         return self.cams.get(0)
 
+    DX_GRAB_TIMEOUT = 1.5
+
+    def _dx_grab(self, cam, box):
+        """One dxcam grab, bounded in time.
+
+        After a display change (exclusive-fullscreen switch, alt-tab, the game dying) Desktop
+        Duplication reports access lost and dxcam 0.3 sits in an endless recovery loop inside
+        `grab` — with our lock held, so BOTH read loops froze and the page stopped refreshing
+        (seen 2026-09-12: two helpers stuck for 20 min at the same second).  The grab runs on
+        its own thread; if it has not come back in DX_GRAB_TIMEOUT the thread is abandoned,
+        dxcam is retired for the rest of the session and the screen is read with mss."""
+        out: dict = {}
+
+        def run():
+            try:
+                out["arr"] = cam.grab(region=box)
+            except Exception:
+                out["arr"] = None
+
+        t = threading.Thread(target=run, daemon=True, name="dxcam-grab")
+        t.start()
+        t.join(self.DX_GRAB_TIMEOUT)
+        if t.is_alive():
+            self.dxcam = None
+            self.cams = {}
+            self.backend = "mss"
+            self.hung_at = time.time()
+            try:
+                import logging
+                logging.getLogger("lancedeck").warning(
+                    "dxcam grab hung (display change); screen reads switch to mss for this session")
+            except Exception:
+                pass
+            return None
+        return out.get("arr")
+
     def size(self) -> tuple[int, int]:
         r = self.win_rect or (0, 0, 1920, 1080)
         return r[2] - r[0], r[3] - r[1]
 
     def describe(self) -> dict:
         return {"backend": self.backend_now, "monitor": self.mon_index, "monitor_rect": self.mon_rect,
-                "window": self.game.title if self.game else None, "window_rect": self.win_rect}
+                "window": self.game.title if self.game else None, "window_rect": self.win_rect,
+                "dxcam_hung_at": self.hung_at}
 
     # ── grab ─────────────────────────────────────────────────────────────────
     def grab(self, region: tuple[float, float, float, float] | None = None) -> Image.Image | None:
@@ -124,10 +162,7 @@ class Grabber:
         with self.lock:
             cam = self._cam()
             if cam is not None:
-                try:
-                    arr = cam.grab(region=box)
-                except Exception:
-                    arr = None
+                arr = self._dx_grab(cam, box)
                 if arr is not None:
                     return Image.fromarray(arr)
                 if self.backend == "dxcam":
