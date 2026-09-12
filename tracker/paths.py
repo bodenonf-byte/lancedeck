@@ -1,4 +1,4 @@
-"""Where things live, in a checkout and in the packaged app.
+﻿"""Where things live, in a checkout and in the packaged app.
 
 RES   bundled, read-only: web/, data/, tools/, the default config
 ROOT  writable, next to the executable (or the checkout): config.json, assets/, records/,
@@ -8,7 +8,7 @@ import os
 import sys
 
 APP = "LanceDeck"
-VERSION = "0.9.0"
+VERSION = "0.9.1"
 FROZEN = bool(getattr(sys, "frozen", False))
 if FROZEN:
     ROOT = os.path.dirname(os.path.abspath(sys.executable))
