@@ -2,7 +2,7 @@
 
 *A free, unofficial tool. Everything runs on your own computer. Nothing is sent anywhere.*
 
-![Lance setup](img/lances.png)
+![Lance setup](https://raw.githubusercontent.com/bodenonf-byte/lancedeck/main/docs/img/lances.png)
 
 ## What it is
 
@@ -65,13 +65,13 @@ pad with its name, variant, pilot, tonnage, role and health. Your own seat is fr
 Below each team, an overview: tonnage, the weight-class mix as a radar, capabilities like ECM,
 jump jets, brawl and sniper, and a short analysis of the composition.
 
-![My mechs](img/board.png)
+![My mechs](https://raw.githubusercontent.com/bodenonf-byte/lancedeck/main/docs/img/board.png)
 
 **My mechs** is your own record: every mech you have played, with games, wins and losses,
 average and best match score, medals and how often you survived, plus the last results one by
 one.
 
-![Records](img/records.png)
+![Records](https://raw.githubusercontent.com/bodenonf-byte/lancedeck/main/docs/img/records.png)
 
 **Records** keeps every match: the final screen, the result, the map and mode, how many of each
 side survived, your own score, and the medal winners. Each record unfolds into the board of that
