@@ -8,7 +8,7 @@ import os
 import sys
 
 APP = "LanceDeck"
-VERSION = "0.9.1"
+VERSION = "0.9.2"
 FROZEN = bool(getattr(sys, "frozen", False))
 if FROZEN:
     ROOT = os.path.dirname(os.path.abspath(sys.executable))
