@@ -23,6 +23,8 @@
   .ok { color:var(--green); } .bad { color:var(--red); }
   pre { background:#05070a; border:1px solid var(--edge); padding:10px; height:180px; overflow:auto; font-size:11px; color:#9fb0c0; margin:8px 0 0; }
   p.note { font-size:12px; color:var(--dim); }
+  .ready { margin-top:14px; padding:12px 14px; border:1px solid var(--green); background:rgba(111,208,138,.08); font-size:13px; line-height:1.6; }
+  .ready b { color:var(--green); } .ready code { color:var(--hud2); } .ready .btn { display:inline-block; margin-left:8px; }
 </style>
 </head>
 <body>
@@ -44,6 +46,7 @@
   <div class="stat"><div><b id="icons">0</b><span>MECH ICONS</span></div><div><b id="maps">0</b><span>MAP PICTURES</span></div><div><b id="cut">0</b><span>CUT-OUTS</span></div></div>
   <div class="row"><button class="btn" id="go">SAVE &amp; IMPORT FROM THE GAME</button><a class="btn ghost" id="open" href="/">OPEN THE TRACKER</a></div>
   <pre id="log"></pre>
+  <div id="ready" class="ready" hidden><b id="readytxt">Ready.</b> Next time, just run LanceDeck.exe: the page opens by itself at <code>http://localhost:8765</code>. Keep the black console window open while you play (minimise it); closing it stops the tracker. <a class="btn" href="/">OPEN THE TRACKER</a></div>
   <p class="note">The tracker only reads the game window while it is open. Runs in quiet mode by default: OCR on the CPU on four threads so the GPU stays with the game. This app is not affiliated with Piranha Games Inc.</p>
 </div>
 <script>
@@ -57,6 +60,12 @@ async function status() {
   $("log").textContent = (s.log || []).join("\n"); $("log").scrollTop = 1e9;
   $("go").disabled = s.running; $("go").textContent = s.running ? "IMPORTING…" : "SAVE & IMPORT FROM THE GAME";
   if (s.error) $("log").textContent += "\nERROR " + s.error;
+  const ready = s.configured && !s.running;
+  $("ready").hidden = !ready;
+  if (ready && s.done && !window.__redirecting) {          // the import just finished: straight to the board
+    window.__redirecting = true; $("readytxt").textContent = "All set. Opening the tracker…";
+    setTimeout(() => { location.href = "/"; }, 2500);
+  }
   return s;
 }
 $("go").onclick = async () => {

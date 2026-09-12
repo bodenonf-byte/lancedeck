@@ -37,6 +37,11 @@ first run and are never redistributed with this app.
    their backdrop (a few minutes, once).
 4. Play. Keep the page on a second screen or open `http://<this-pc>:8765` on a phone.
 
+**Every time after that**: run `LanceDeck.exe` before you drop. A black console window opens and
+the page appears in your browser by itself at `http://localhost:8765`. Minimise the console,
+do not close it: closing it stops the tracker. To stop, close it or press Ctrl+C in it. A
+shortcut to the exe on the desktop or in the Start menu is the convenient way.
+
 If Windows SmartScreen shows "Windows protected your PC", click **More info** then **Run anyway**: releases are being moved to builds signed through SignPath Foundation (docs/SIGNPATH.md); until then the warning only means Windows does not know the publisher yet.
 
 ## What it needs from you in game
