@@ -280,6 +280,9 @@ main#content { padding: 16px 26px 20px; display: block; }
   linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.35)); border: 1px solid color-mix(in srgb, var(--arm) 55%, transparent); clip-path: polygon(12% 0, 88% 0, 100% 50%, 88% 100%, 12% 100%, 0 50%); }
 .pad .render img { position: relative; z-index: 1; width: 78%; max-width: 150px; aspect-ratio: 1; object-fit: cover; object-position: 50% 20%;
   clip-path: polygon(50% 0, 93% 12%, 100% 50%, 93% 88%, 50% 100%, 7% 88%, 0 50%, 7% 12%); filter: drop-shadow(0 8px 10px rgba(0,0,0,.6)); }
+.pad .render a.build { display: contents; cursor: pointer; }          /* the mech picture links to its build guides */
+.pad .render a.build img:hover, .mini a.build img:hover { filter: brightness(1.25) drop-shadow(0 0 8px var(--hud2)); }
+.mini a.build { display: contents; cursor: pointer; }
 .pad .render .code { position: relative; z-index: 1; font: 800 26px/1 "Barlow Condensed", sans-serif; letter-spacing: .1em; color: rgba(255,255,255,.35); margin-bottom: 26%; }
 .pad .render .tons { position: absolute; right: 4px; top: 4px; z-index: 2; font: 700 11px/1 "Barlow Condensed", sans-serif; letter-spacing: .06em; color: var(--hud2); background: rgba(0,0,0,.6); padding: 3px 5px; border: 1px solid rgba(255,255,255,.12); }
 .pad .render .medal { position: absolute; left: 4px; top: 0; z-index: 2; font-size: 24px; filter: drop-shadow(0 0 6px rgba(0,0,0,.8)); }

@@ -120,7 +120,7 @@ function pad(s, i) {
   return `<div class="pad c-${s.cls || "Unknown"} ${s.alive ? "" : "dead"} ${me ? "me" : ""} ${s.code ? "" : "nomech"} ${cutp ? "cut" : ""} ${s.guess ? "guess" : ""} ${s.medal ? "medal" + s.medal : ""}" title="${escapeHtml(s.pilot)}${s.pros ? " · + " + escapeHtml(s.pros) + " · − " + escapeHtml(s.cons) : ""}">
     <div class="render">
       <div class="floor"></div>
-      ${pic ? `<img src="${pic}" alt="">` : `<span class="code">${s.code || "?"}</span>`}
+      ${s.code ? `<a class="build" href="${buildUrl(s)}" target="_blank" rel="noopener" title="builds for the ${escapeHtml(s.name)} ${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""} on GrimMechs">` : ""}${pic ? `<img src="${pic}" alt="">` : `<span class="code">${s.code || "?"}</span>`}${s.code ? "</a>" : ""}
       ${s.code ? `<b class="tons">${s.tons}t</b>` : ""}
       ${medalOf(s)}
       ${me ? '<span class="you">YOU</span>' : ""}
@@ -137,6 +137,14 @@ function pad(s, i) {
       ${loadoutOf(s) ? `<div class="pl-load" title="weapons read when this mech was locked">${escapeHtml(loadoutOf(s))}</div>` : ""}
     </div>
   </div>`;
+}
+// the community build guides for this mech: GrimMechs lists them by chassis, one anchor per
+// variant (BuildGuides?c=Shadow+Cat#SHC-PRIME).  Opened by the viewer's own browser on a click;
+// the helper itself still makes no outbound connection.
+function buildUrl(s) {
+  const chassis = encodeURIComponent(s.name || s.code).replace(/%20/g, "+");
+  const anchor = s.variant ? `#${s.code}-${encodeURIComponent(s.variant.toUpperCase())}` : "";
+  return `https://grimmechs.isengrim.org/BuildGuides?c=${chassis}${anchor}`;
 }
 function hpOf(s) { if (!s.alive || s.health == null) return null; return s.health; }   // null = nothing read yet
 function loadoutOf(s) {
@@ -328,7 +336,7 @@ function renderFooter(d) {
   const seen = d.seen || [];
   document.getElementById("seenStrip").innerHTML = `<h5>SPOTTED, PILOT UNKNOWN</h5><div class="seenrow">${seen.length ? seen.map(s => {
     const pic = picOf(s);
-    return `<div class="mini ${s.alive ? "" : "dead"} c-${s.cls}">${pic ? `<img src="${pic}" alt="">` : `<span>${s.code}</span>`}<div class="mname">${escapeHtml(s.name)}</div><div class="msub">${s.code}-${escapeHtml(s.variant)}${s.health != null ? " · " + s.health + "%" : ""}</div></div>`;
+    return `<div class="mini ${s.alive ? "" : "dead"} c-${s.cls}">${s.code ? `<a class="build" href="${buildUrl(s)}" target="_blank" rel="noopener" title="builds on GrimMechs">` : ""}${pic ? `<img src="${pic}" alt="">` : `<span>${s.code}</span>`}${s.code ? "</a>" : ""}<div class="mname">${escapeHtml(s.name)}</div><div class="msub">${s.code}-${escapeHtml(s.variant)}${s.health != null ? " · " + s.health + "%" : ""}</div></div>`;
   }).join("") : '<div class="none">enemy mechs seen before their pilot is known appear here</div>'}</div>`;
   const file = mapFile(d.map);
   document.getElementById("mapCard").innerHTML = d.map ? `<div class="mappic" style="${file ? `background-image:url('/assets/maps/${file}')` : `background:${(MAP_TONES[d.map] || ["#1a2028"])[0]}`}"></div><div class="maptxt"><b>${escapeHtml(d.map).toUpperCase()}</b><span>${escapeHtml(d.mode || "")}</span></div>`
