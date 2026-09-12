@@ -229,16 +229,17 @@ class Service:
                 time.sleep(0.25); continue
             t0 = time.time()
             try:
+                # one grab of the window per tick, both corners cropped out of it
                 region = self.cfg.get("panel_region") or [0.0, 0.0, 0.36, 0.26]
-                img = self.grabber.grab(tuple(region))
-                if img is not None:
-                    self.analyse_panel(img)
+                treg = self.cfg.get("target_region") or [0.64, 0.0, 0.94, 0.28]
                 self._tick = getattr(self, "_tick", 0) + 1
-                if self._tick % 2 == 0:                     # every other tick: the target info panel, top right
-                    treg = self.cfg.get("target_region") or [0.64, 0.0, 0.94, 0.28]
-                    timg = self.grabber.grab(tuple(treg))
-                    if timg is not None:
-                        self.analyse_target(timg)
+                frame = self.grabber.grab()
+                if frame is not None:
+                    W, H = frame.size
+                    crop = lambda r: frame.crop((int(r[0] * W), int(r[1] * H), int(r[2] * W), int(r[3] * H)))
+                    self.analyse_panel(crop(region))
+                    if self._tick % 2 == 0:                 # every other tick: the target info panel, top right
+                        self.analyse_target(crop(treg))
             except Exception as e:
                 self.stats["last_error"] = "panel: " + repr(e)[:160]
             dt = 1.0 / max(0.5, float(self.cfg.get("fps", 6)))
