@@ -22,6 +22,9 @@ class Grabber:
         self.backend = "mss"
         self.cams: dict[int, object] = {}
         self.default_monitor = monitor
+        self.window_mode = True          # capture the window's own surface; False = always the screen region
+        self.backend_now = "window"
+        self._screen_until = 0.0
         self.game: window.GameWindow | None = None
         self.mon_rect: tuple[int, int, int, int] | None = None
         self.win_rect: tuple[int, int, int, int] | None = None
@@ -83,16 +86,33 @@ class Grabber:
         return r[2] - r[0], r[3] - r[1]
 
     def describe(self) -> dict:
-        return {"backend": self.backend, "monitor": self.mon_index, "monitor_rect": self.mon_rect,
+        return {"backend": self.backend_now, "monitor": self.mon_index, "monitor_rect": self.mon_rect,
                 "window": self.game.title if self.game else None, "window_rect": self.win_rect}
 
     # ── grab ─────────────────────────────────────────────────────────────────
     def grab(self, region: tuple[float, float, float, float] | None = None) -> Image.Image | None:
-        """The game window, or a region of it given as fractions (x0, y0, x1, y1)."""
+        """The game window, or a region of it given as fractions (x0, y0, x1, y1).
+
+        First choice: the window's own surface through the Desktop Window Manager (PrintWindow),
+        which holds only the game whatever other windows cover it — the way OBS's window capture
+        works, without touching the game.  An exclusive-fullscreen game has no such surface and
+        comes back black; then, and only then, the screen region is read instead (nothing can
+        cover an exclusive-fullscreen game)."""
         self.locate()
         m = self.mon_rect; w = self.win_rect
         if m is None or w is None:
             return None
+        if self.game is not None and self.window_mode and time.time() >= self._screen_until:
+            try:
+                from . import wincap
+                img = wincap.grab_window(self.game.hwnd, region)
+            except Exception:
+                img = None
+            if img is not None and not wincap.looks_black(img):
+                self.backend_now = "window"
+                return img
+            self._screen_until = time.time() + 10.0     # black or failed: exclusive fullscreen, use the screen for a while
+        self.backend_now = self.backend
         if region is None:
             box = (w[0] - m[0], w[1] - m[1], w[2] - m[0], w[3] - m[1])
         else:

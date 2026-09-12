@@ -73,6 +73,7 @@ class Service:
                       "screen": list(self.grabber.size()), "target": self.grabber.describe()}
         self.roster = Roster()
         self.roster.memory = load_memory()
+        self.grabber.window_mode = self.cfg.get("capture", "window") != "screen"
         self.assets_v = 0              # bumps when a picture is harvested, so the page refetches the list
         self._map_since = 0.0; self._map_seen = ""
         from .match import set_panel_region

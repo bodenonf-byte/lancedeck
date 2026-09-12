@@ -1,5 +1,5 @@
 {
-  "_about": "Runtime settings, created next to the app on first run. my_name: your pilot name as shown in game. monitor: 1 = primary. fps: lance-panel reads per second. full_every: seconds between full-frame reads. panel_region / target_region: the lance panel and the target info panel as fractions of the game window. ocr_dml: use the GPU (DirectML) instead of the CPU. ocr_threads: CPU threads for OCR. donate_url: the support link shown in the app.",
+  "_about": "Runtime settings, created next to the app on first run. my_name: your pilot name as shown in game. monitor: 1 = primary. fps: lance-panel reads per second. full_every: seconds between full-frame reads. panel_region / target_region: the lance panel and the target info panel as fractions of the game window. ocr_dml: use the GPU (DirectML) instead of the CPU. ocr_threads: CPU threads for OCR. donate_url: the support link shown in the app. capture: \"window\" reads the game window's own surface (other windows on top are excluded; exclusive fullscreen falls back to the screen), \"screen\" always reads the screen region.",
   "my_name": "",
   "port": 8765,
   "monitor": 1,
@@ -25,5 +25,6 @@
     0.94,
     0.28
   ],
-  "donate_url": "https://github.com/sponsors/bodenonf-byte"
+  "donate_url": "https://github.com/sponsors/bodenonf-byte",
+  "capture": "window"
 }
