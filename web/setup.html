@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LanceDeck setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0b0e12; --panel:#131820; --edge:#2a3441; --ink:#e2e8f0; --dim:#8b96a5; --hud2:#ffb347; --green:#6fd08a; --red:#e35b4c; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 "Barlow","Segoe UI",sans-serif; display:flex; justify-content:center; padding:40px 20px; }
+  .box { width:min(680px,100%); background:var(--panel); border:1px solid var(--edge); padding:26px 30px; clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px)); }
+  h1 { margin:0 0 4px; font:800 34px/1 "Barlow Condensed",sans-serif; letter-spacing:.06em; } h1 i { font-style:normal; color:var(--hud2); }
+  .sub { color:var(--dim); font:600 12px "Barlow Condensed",sans-serif; letter-spacing:.22em; margin-bottom:22px; }
+  h3 { margin:22px 0 8px; font:700 14px "Barlow Condensed",sans-serif; letter-spacing:.2em; color:var(--hud2); }
+  label { display:block; font-size:12px; color:var(--dim); margin:8px 0 4px; letter-spacing:.08em; }
+  input { width:100%; box-sizing:border-box; background:#0e1319; border:1px solid var(--edge); color:var(--ink); padding:9px 10px; font:inherit; }
+  input:focus { outline:none; border-color:var(--hud2); }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .btn { background:#1a212b; border:1px solid var(--hud2); color:var(--hud2); padding:9px 16px; font:700 13px "Barlow Condensed",sans-serif; letter-spacing:.14em; cursor:pointer; text-decoration:none; }
+  .btn.ghost { border-color:var(--edge); color:var(--dim); } .btn:disabled { opacity:.5; cursor:default; }
+  .stat { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:8px 0; }
+  .stat div { background:#0e1319; border:1px solid var(--edge); padding:10px; text-align:center; } .stat b { display:block; font:800 24px "Barlow Condensed",sans-serif; } .stat span { font-size:11px; color:var(--dim); letter-spacing:.14em; }
+  .ok { color:var(--green); } .bad { color:var(--red); }
+  pre { background:#05070a; border:1px solid var(--edge); padding:10px; height:180px; overflow:auto; font-size:11px; color:#9fb0c0; margin:8px 0 0; }
+  p.note { font-size:12px; color:var(--dim); }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>LANCE<i>DECK</i></h1>
+  <div class="sub">FIRST-RUN SETUP · UNOFFICIAL TEAM TRACKER FOR MECHWARRIOR ONLINE</div>
+
+  <h3>1 · YOUR PILOT NAME</h3>
+  <label>exactly as it shows in game (it tells your team from the enemy's on the scoreboard)</label>
+  <input id="name" placeholder="pilot name" spellcheck="false">
+
+  <h3>2 · THE GAME</h3>
+  <label>MechWarrior Online install folder</label>
+  <div class="row"><input id="game" placeholder="C:\Program Files (x86)\Steam\steamapps\common\MechWarrior Online" style="flex:1"></div>
+  <p class="note" id="gamenote"></p>
+
+  <h3>3 · PICTURES</h3>
+  <p class="note">Mech and map pictures are copied out of your own game files and cut out of their backdrop, here on this computer. Nothing is downloaded and nothing leaves your machine. The cut-outs take a few minutes once.</p>
+  <div class="stat"><div><b id="icons">0</b><span>MECH ICONS</span></div><div><b id="maps">0</b><span>MAP PICTURES</span></div><div><b id="cut">0</b><span>CUT-OUTS</span></div></div>
+  <div class="row"><button class="btn" id="go">SAVE &amp; IMPORT FROM THE GAME</button><a class="btn ghost" id="open" href="/">OPEN THE TRACKER</a></div>
+  <pre id="log"></pre>
+  <p class="note">The tracker only reads the game window while it is open. Runs in quiet mode by default: OCR on the CPU on four threads so the GPU stays with the game. This app is not affiliated with Piranha Games Inc.</p>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+async function status() {
+  const s = await fetch("/api/setup/status").then(r => r.json());
+  if (!$("name").value && s.my_name) $("name").value = s.my_name;
+  if (!$("game").value && s.game) $("game").value = s.game;
+  $("gamenote").innerHTML = s.game ? `<span class="ok">✓ game found</span>` : `<span class="bad">✕ not found — paste the install folder</span>`;
+  $("icons").textContent = s.icons; $("maps").textContent = s.maps; $("cut").textContent = s.cut;
+  $("log").textContent = (s.log || []).join("\n"); $("log").scrollTop = 1e9;
+  $("go").disabled = s.running; $("go").textContent = s.running ? "IMPORTING…" : "SAVE & IMPORT FROM THE GAME";
+  if (s.error) $("log").textContent += "\nERROR " + s.error;
+  return s;
+}
+$("go").onclick = async () => {
+  await fetch("/api/setup/import", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({my_name: $("name").value, game_dir: $("game").value})});
+  status();
+};
+status(); setInterval(status, 2000);
+</script>
+</body>
+</html>

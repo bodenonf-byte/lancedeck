@@ -1,0 +1,999 @@
+{
+  "_about": "MechWarrior Online chassis, keyed by the variant-code prefix the scoreboard prints (e.g. TBR-PRIME -> TBR). Tonnage and class are fixed; pros/cons are one-line reads for a glance mid-match. Add variants under 'variants' when a specific one deserves its own note.",
+  "chassis": {
+    "LCT": {
+      "name": "Locust",
+      "tons": 20,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Fastest thing on the field, tiny profile",
+      "cons": "Paper armour, one hit from anything big"
+    },
+    "FLE": {
+      "name": "Flea",
+      "tons": 20,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Very fast, MASC, hard to track",
+      "cons": "Almost no armour, weak weapons"
+    },
+    "PIR": {
+      "name": "Piranha",
+      "tons": 20,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "Machine-gun swarm shreds open components",
+      "cons": "Dies to a stiff breeze, useless at range"
+    },
+    "COM": {
+      "name": "Commando",
+      "tons": 25,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Cheap fast SRM/laser harasser",
+      "cons": "Fragile, low payload"
+    },
+    "MLX": {
+      "name": "Mist Lynx",
+      "tons": 25,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "Jump jets, ECM options, fast",
+      "cons": "Very light payload, fragile"
+    },
+    "SDR": {
+      "name": "Spider",
+      "tons": 30,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Jump jets, very agile, hard to hit",
+      "cons": "Minimal firepower"
+    },
+    "UM": {
+      "name": "Urbanmech",
+      "tons": 30,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Tanky for a light, AC/20 capable, 360 torso",
+      "cons": "Slow for its class"
+    },
+    "KFX": {
+      "name": "Kit Fox",
+      "tons": 30,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "ECM/AMS support, flexible omnipods",
+      "cons": "Slow light, thin armour"
+    },
+    "ACH": {
+      "name": "Arctic Cheetah",
+      "tons": 30,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "ECM, jump jets, fast laser harasser",
+      "cons": "Low armour, heat-limited"
+    },
+    "JVN": {
+      "name": "Javelin",
+      "tons": 30,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "SRM brawler, jump jets, sturdy legs",
+      "cons": "Short range only"
+    },
+    "INC": {
+      "name": "Incubus",
+      "tons": 30,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "Fast, decent energy hardpoints",
+      "cons": "Thin armour"
+    },
+    "OSR": {
+      "name": "Osiris",
+      "tons": 30,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Fast striker, good hardpoints",
+      "cons": "Fragile"
+    },
+    "JR7": {
+      "name": "Jenner",
+      "tons": 35,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Fast laser/SRM striker, jump jets",
+      "cons": "Big side torsos, dies when caught"
+    },
+    "RVN": {
+      "name": "Raven",
+      "tons": 35,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "ECM scout, spotting, decent speed",
+      "cons": "Light payload"
+    },
+    "FS9": {
+      "name": "Firestarter",
+      "tons": 35,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Many energy hardpoints, jump jets, fast",
+      "cons": "Runs hot, thin"
+    },
+    "PNT": {
+      "name": "Panther",
+      "tons": 35,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "PPC sniper light, jump jets",
+      "cons": "Slow for a light"
+    },
+    "WLF": {
+      "name": "Wolfhound",
+      "tons": 35,
+      "class": "Light",
+      "faction": "IS",
+      "pros": "Tough for a light, laser boat",
+      "cons": "No jump jets, average speed"
+    },
+    "ADR": {
+      "name": "Adder",
+      "tons": 35,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "PPC/laser poke, good range",
+      "cons": "Slow, fragile"
+    },
+    "COU": {
+      "name": "Cougar",
+      "tons": 35,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "Heavy firepower for a light",
+      "cons": "Slow, thin"
+    },
+    "CDA": {
+      "name": "Cicada",
+      "tons": 40,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Light speed on a medium, ECM variants",
+      "cons": "Medium size with light armour"
+    },
+    "ASN": {
+      "name": "Assassin",
+      "tons": 40,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Fast, jump jets, quirks",
+      "cons": "Thin, low payload"
+    },
+    "VL": {
+      "name": "Vulcan",
+      "tons": 40,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Fast, jump jets, ballistic quirks",
+      "cons": "Thin armour"
+    },
+    "VPR": {
+      "name": "Viper",
+      "tons": 40,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Very fast, jump jets, laser harasser",
+      "cons": "Fragile, low payload"
+    },
+    "ACW": {
+      "name": "Arctic Wolf",
+      "tons": 40,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Fast SRM/streak striker",
+      "cons": "Fragile"
+    },
+    "BJ": {
+      "name": "Blackjack",
+      "tons": 45,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Jump jets, good hardpoints, cheap",
+      "cons": "Slowish, average armour"
+    },
+    "VND": {
+      "name": "Vindicator",
+      "tons": 45,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "PPC/LRM support, jump jets",
+      "cons": "Slow, limited hardpoints"
+    },
+    "PXH": {
+      "name": "Phoenix Hawk",
+      "tons": 45,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Fast, jump jets, MASC, flanker",
+      "cons": "Thin, low payload"
+    },
+    "HSN": {
+      "name": "Hellspawn",
+      "tons": 45,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Fast missile/laser striker, jump jets",
+      "cons": "Fragile"
+    },
+    "SHC": {
+      "name": "Shadow Cat",
+      "tons": 45,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "ECM, jump jets, fast poke",
+      "cons": "Light payload, thin"
+    },
+    "IFR": {
+      "name": "Ice Ferret",
+      "tons": 45,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Very fast for a medium",
+      "cons": "Low payload, weak armour"
+    },
+    "CN9": {
+      "name": "Centurion",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Tough torsos, shield arm, SRM brawler",
+      "cons": "Slowish, weak arm weapons"
+    },
+    "HBK": {
+      "name": "Hunchback",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Big single punch (AC/20 or laser hunch)",
+      "cons": "Hunch is a giant weak point"
+    },
+    "ENF": {
+      "name": "Enforcer",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Ballistic quirks, jump jets, sturdy",
+      "cons": "Slow, wide"
+    },
+    "TBT": {
+      "name": "Trebuchet",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Missile support, fast for the tonnage",
+      "cons": "Big arms, thin"
+    },
+    "CRB": {
+      "name": "Crab",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Tanky, laser quirks, good hitboxes",
+      "cons": "Slow, low hardpoint count"
+    },
+    "UZL": {
+      "name": "Uziel",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Fast, jump jets, PPC/SRM options",
+      "cons": "Thin armour"
+    },
+    "NVA": {
+      "name": "Nova",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Massive laser alpha, jump jets",
+      "cons": "Overheats, dies fast"
+    },
+    "HMN": {
+      "name": "Huntsman",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Flexible omni, jump jets, good speed",
+      "cons": "Average armour"
+    },
+    "GRF": {
+      "name": "Griffin",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Jump jets, tough, SRM/PPC brawler",
+      "cons": "Low hardpoint count"
+    },
+    "WVR": {
+      "name": "Wolverine",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Jump jets, ballistic/laser mix, sturdy",
+      "cons": "Average speed"
+    },
+    "SHD": {
+      "name": "Shadow Hawk",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Tall, jump jets, ballistic quirks",
+      "cons": "Big target, meh hardpoints"
+    },
+    "KTO": {
+      "name": "Kintaro",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Missile boat, decent speed",
+      "cons": "Big, no jump jets"
+    },
+    "DV": {
+      "name": "Dervish",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Missile support, jump jets",
+      "cons": "Fragile"
+    },
+    "BSW": {
+      "name": "Bushwacker",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Low profile, tough, ballistic arms",
+      "cons": "Slow, wide"
+    },
+    "SCR": {
+      "name": "Stormcrow",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Fast, huge laser/streak payload",
+      "cons": "No jump jets"
+    },
+    "BLN": {
+      "name": "Black Lanner",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Very fast, MASC, laser striker",
+      "cons": "Thin"
+    },
+    "VGL": {
+      "name": "Vapor Eagle",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Jump jets, flexible hardpoints",
+      "cons": "Average armour"
+    },
+    "DRG": {
+      "name": "Dragon",
+      "tons": 60,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Fast heavy, ballistic quirks",
+      "cons": "Weak CT, low payload"
+    },
+    "QKD": {
+      "name": "Quickdraw",
+      "tons": 60,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Jump jets, fast, SRM/laser brawler",
+      "cons": "Thin for a heavy"
+    },
+    "RFL": {
+      "name": "Rifleman",
+      "tons": 60,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Ballistic/laser dakka, high mounts",
+      "cons": "Thin armour, big arms"
+    },
+    "CHP": {
+      "name": "Champion",
+      "tons": 60,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Fast heavy, solid hitboxes",
+      "cons": "Low payload"
+    },
+    "MDD": {
+      "name": "Mad Dog",
+      "tons": 60,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "Missile boat, lots of tubes",
+      "cons": "Fragile, XL engine"
+    },
+    "HLF": {
+      "name": "Hellfire",
+      "tons": 60,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "Fast, good energy/missile mix",
+      "cons": "Thin"
+    },
+    "CPLT": {
+      "name": "Catapult",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Missile boat or laser ears, jump jets",
+      "cons": "Ears blow off easily"
+    },
+    "JM6": {
+      "name": "Jagermech",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Ballistic dakka, high arms",
+      "cons": "Thin torsos, big arms"
+    },
+    "TDR": {
+      "name": "Thunderbolt",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Tanky, big laser quirks",
+      "cons": "Slow, tall"
+    },
+    "RGH": {
+      "name": "Roughneck",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Very tough, ballistic quirks",
+      "cons": "Slow"
+    },
+    "CRD": {
+      "name": "Crusader",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Missile/laser mix, sturdy",
+      "cons": "Average speed"
+    },
+    "EBJ": {
+      "name": "Ebon Jaguar",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "High mounts, big payload",
+      "cons": "Thin, XL"
+    },
+    "HBR": {
+      "name": "Hellbringer",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "ECM, laser alpha, good speed",
+      "cons": "Weak torsos"
+    },
+    "LBK": {
+      "name": "Linebacker",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "Very fast heavy, brawler",
+      "cons": "Low payload"
+    },
+    "CTF": {
+      "name": "Cataphract",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Tanky, ballistic quirks, jump jets on some",
+      "cons": "Slow"
+    },
+    "GHR": {
+      "name": "Grasshopper",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Jump jets, tanky, laser boat",
+      "cons": "Big CT, runs hot"
+    },
+    "WHM": {
+      "name": "Warhammer",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Big PPC/laser arms, good quirks",
+      "cons": "Arms get shot off"
+    },
+    "ARC": {
+      "name": "Archer",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Missile boat, tough torsos",
+      "cons": "Slow, weak arms"
+    },
+    "SMN": {
+      "name": "Summoner",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "Fast, jump jets, tough",
+      "cons": "Low payload for the tonnage"
+    },
+    "NCT": {
+      "name": "Nova Cat",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "Laser boat, good mounts",
+      "cons": "Runs hot"
+    },
+    "SNS": {
+      "name": "Sun Spider",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "Tough, good hitboxes, flexible",
+      "cons": "Average speed"
+    },
+    "MAD": {
+      "name": "Marauder",
+      "tons": 75,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Excellent hitboxes, PPC/AC poke",
+      "cons": "Low mounts on some"
+    },
+    "ON1": {
+      "name": "Orion",
+      "tons": 75,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Tanky, missile/ballistic mix",
+      "cons": "Slow, big"
+    },
+    "BL": {
+      "name": "Black Knight",
+      "tons": 75,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Laser boat with big quirks, tanky",
+      "cons": "Runs hot"
+    },
+    "TBR": {
+      "name": "Timber Wolf",
+      "tons": 75,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "The all-rounder: fast, jump jets, big payload",
+      "cons": "Side torsos are big targets"
+    },
+    "NTG": {
+      "name": "Night Gyr",
+      "tons": 75,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "High mounts, heavy dakka/gauss",
+      "cons": "Slow, big"
+    },
+    "AWS": {
+      "name": "Awesome",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "PPC boat, energy quirks",
+      "cons": "Huge CT, slow"
+    },
+    "VTR": {
+      "name": "Victor",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Jump jets, fast for an assault",
+      "cons": "Thin for an assault"
+    },
+    "ZEU": {
+      "name": "Zeus",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Fast assault, good quirks",
+      "cons": "Weak arms"
+    },
+    "CGR": {
+      "name": "Charger",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Fast assault brawler",
+      "cons": "Low payload"
+    },
+    "HTM": {
+      "name": "Hatamoto-Chi",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Sturdy, PPC/SRM options",
+      "cons": "Slow"
+    },
+    "GAR": {
+      "name": "Gargoyle",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Very fast assault",
+      "cons": "Low payload, weak torsos"
+    },
+    "BLR": {
+      "name": "Battlemaster",
+      "tons": 85,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Tall gun platform, laser/PPC quirks",
+      "cons": "Tall target, slow"
+    },
+    "STK": {
+      "name": "Stalker",
+      "tons": 85,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Missile/laser boat, narrow profile",
+      "cons": "Slow, big side torsos"
+    },
+    "WHK": {
+      "name": "Warhawk",
+      "tons": 85,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "PPC/laser alpha, high mounts",
+      "cons": "Slow, runs hot"
+    },
+    "HGN": {
+      "name": "Highlander",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Jump jets, tanky, gauss/missile",
+      "cons": "Slow"
+    },
+    "CP": {
+      "name": "Cyclops",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Fast assault, command console",
+      "cons": "Weak CT"
+    },
+    "MAL": {
+      "name": "Mauler",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Ballistic dakka boat",
+      "cons": "Slow, wide"
+    },
+    "BAS": {
+      "name": "Blood Asp",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "High mounts, huge alpha, decent speed",
+      "cons": "Ammo hungry, XL"
+    },
+    "SNV": {
+      "name": "Supernova",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Laser boat, jump jets",
+      "cons": "Runs hot, slow"
+    },
+    "MCII": {
+      "name": "Mad Cat Mk II",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Gauss/dakka boat, good hitboxes, jump jets",
+      "cons": "Big"
+    },
+    "BNC": {
+      "name": "Banshee",
+      "tons": 95,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Fast assault, tanky",
+      "cons": "Big CT"
+    },
+    "NSR": {
+      "name": "Nightstar",
+      "tons": 95,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Gauss/PPC sniper, tanky",
+      "cons": "Slow"
+    },
+    "COR": {
+      "name": "Corsair",
+      "tons": 95,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Ballistic/laser bruiser",
+      "cons": "Slow"
+    },
+    "EXE": {
+      "name": "Executioner",
+      "tons": 95,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Fast assault, jump jets, MASC",
+      "cons": "Low payload for 95 t"
+    },
+    "AS7": {
+      "name": "Atlas",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Most armour in the game, brawler, ECM on the D-DC",
+      "cons": "Slow, the biggest target on the map"
+    },
+    "KGC": {
+      "name": "King Crab",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Twin AC/20 or gauss, tanky",
+      "cons": "Slow, wide arms"
+    },
+    "ANH": {
+      "name": "Annihilator",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Absurd dakka, thick armour",
+      "cons": "Slowest thing alive"
+    },
+    "FNR": {
+      "name": "Fafnir",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Twin heavy gauss, tanky",
+      "cons": "Slow, low mounts"
+    },
+    "DWF": {
+      "name": "Dire Wolf",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Biggest payload in the game",
+      "cons": "Slow, low agility, big side torsos"
+    },
+    "KDK": {
+      "name": "Kodiak",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Fast for 100 t, high mounts",
+      "cons": "Big side torsos"
+    },
+    "SR": {
+      "name": "Stone Rhino",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Gauss/laser sniper, tanky",
+      "cons": "Slow"
+    },
+    "LGB": {
+      "name": "Longbow",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Missile boat, lots of tubes, tough",
+      "cons": "Slow, weak up close"
+    },
+    "SLR": {
+      "name": "Sagittaire",
+      "tons": 95,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Tanky energy assault",
+      "cons": "Slow"
+    },
+    "FMT": {
+      "name": "Fire Moth",
+      "tons": 20,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "Fastest Clan light, MASC",
+      "cons": "Nothing survives a hit"
+    },
+    "HCT": {
+      "name": "Hatchetman",
+      "tons": 45,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Jump jets, ballistic quirks, cheap",
+      "cons": "Thin, low payload"
+    }
+  },
+  "aliases": {
+    "MAD-4A": "MAD2",
+    "MAD-4H": "MAD2",
+    "MAD-4S": "MAD2",
+    "MAD-5A": "MAD2",
+    "MAD-6S": "MAD2",
+    "MAD-AL": "MAD2",
+    "MAD-IIC": "MADIIC",
+    "WHM-IIC": "WHMIIC",
+    "HBK-IIC": "HBKIIC",
+    "JR7-IIC": "JR7IIC",
+    "LCT-IIC": "LCTIIC",
+    "ON1-IIC": "ON1IIC",
+    "HGN-IIC": "HGNIIC",
+    "RFL-IIC": "RFLIIC"
+  },
+  "chassis_extra": {
+    "MAD2": {
+      "name": "Marauder II",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Marauder hitboxes at 100 t, jump jets",
+      "cons": "Slow"
+    },
+    "MADIIC": {
+      "name": "Marauder IIC",
+      "tons": 85,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Big alpha, good hitboxes",
+      "cons": "Slow"
+    },
+    "WHMIIC": {
+      "name": "Warhammer IIC",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Laser/PPC arms, decent speed",
+      "cons": "Arms are the payload"
+    },
+    "HBKIIC": {
+      "name": "Hunchback IIC",
+      "tons": 50,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Huge alpha, jump jets on some",
+      "cons": "Hunch and fragility"
+    },
+    "JR7IIC": {
+      "name": "Jenner IIC",
+      "tons": 35,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "SRM/laser alpha, fast",
+      "cons": "Dies instantly when caught"
+    },
+    "LCTIIC": {
+      "name": "Locust IIC",
+      "tons": 25,
+      "class": "Light",
+      "faction": "Clan",
+      "pros": "Fast, more guns than a Locust",
+      "cons": "Paper armour"
+    },
+    "ON1IIC": {
+      "name": "Orion IIC",
+      "tons": 75,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "Tanky, big missile/ballistic payload",
+      "cons": "Slow"
+    },
+    "HGNIIC": {
+      "name": "Highlander IIC",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Jump jets, gauss/laser, tanky",
+      "cons": "Slow"
+    },
+    "RFLIIC": {
+      "name": "Rifleman IIC",
+      "tons": 65,
+      "class": "Heavy",
+      "faction": "Clan",
+      "pros": "High-mounted dakka",
+      "cons": "Thin"
+    },
+    "BANE": {
+      "name": "Bane",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Huge missile/ballistic boat, many hardpoints",
+      "cons": "Slow, wide, XL engine"
+    },
+    "BHKU": {
+      "name": "Black Hawk-KU",
+      "tons": 60,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Energy boat, jump jets, compact",
+      "cons": "Runs hot"
+    },
+    "BHN": {
+      "name": "Behemoth",
+      "tons": 100,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Heavy armour, big ballistic mounts",
+      "cons": "Very slow, large target"
+    },
+    "BKL": {
+      "name": "Black Lanner",
+      "tons": 55,
+      "class": "Medium",
+      "faction": "Clan",
+      "pros": "Fast, MASC, good energy mounts",
+      "cons": "Thin armour for its size"
+    },
+    "BSK": {
+      "name": "Bull Shark",
+      "tons": 95,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Mixed hardpoints, good torso mounts",
+      "cons": "Slow"
+    },
+    "GTL": {
+      "name": "Gauntlet",
+      "tons": 70,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Omni heavy, high arm mounts",
+      "cons": "Large side torsos"
+    },
+    "NGA": {
+      "name": "Naga",
+      "tons": 80,
+      "class": "Assault",
+      "faction": "Clan",
+      "pros": "Missile boat with big arms",
+      "cons": "Ammo dependent, slow"
+    },
+    "SD1": {
+      "name": "Sunder",
+      "tons": 90,
+      "class": "Assault",
+      "faction": "IS",
+      "pros": "Omni assault, high hardpoints",
+      "cons": "Slow, tall"
+    },
+    "TNS": {
+      "name": "Thanatos",
+      "tons": 75,
+      "class": "Heavy",
+      "faction": "IS",
+      "pros": "Jump jets, high mounts, good armour",
+      "cons": "XL side torsos"
+    },
+    "VT": {
+      "name": "Vulcan",
+      "tons": 40,
+      "class": "Medium",
+      "faction": "IS",
+      "pros": "Fast, flamers and MGs, good hitboxes",
+      "cons": "Low damage output"
+    }
+  }
+}

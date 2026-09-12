@@ -1,0 +1,29 @@
+{
+  "_about": "Runtime settings, created next to the app on first run. my_name: your pilot name as shown in game. monitor: 1 = primary. fps: lance-panel reads per second. full_every: seconds between full-frame reads. panel_region / target_region: the lance panel and the target info panel as fractions of the game window. ocr_dml: use the GPU (DirectML) instead of the CPU. ocr_threads: CPU threads for OCR. donate_url: the support link shown in the app.",
+  "my_name": "",
+  "port": 8765,
+  "monitor": 1,
+  "fps": 3,
+  "full_every": 2.0,
+  "panel_region": [
+    0,
+    0,
+    0.36,
+    0.26
+  ],
+  "ocr_dml": false,
+  "ocr_scale": 1.0,
+  "row_band": [
+    0.0,
+    1.0
+  ],
+  "live": true,
+  "ocr_threads": 4,
+  "target_region": [
+    0.64,
+    0.0,
+    0.94,
+    0.28
+  ],
+  "donate_url": "https://github.com/sponsors/bodenonf-byte"
+}

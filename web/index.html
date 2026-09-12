@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LanceDeck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="mapbg" class="mapbg"></div>
+<div class="shell">
+  <header class="top">
+    <div class="logo"><b>LANCE<i>DECK</i></b><small>UNOFFICIAL TEAM TRACKER</small></div>
+    <div class="title"><h1>TEAM COMPOSITION</h1><p>DROP. FIGHT. WIN TOGETHER.</p></div>
+    <div class="slogan">LANCES MAKE VICTORIES</div>
+  </header>
+
+  <div class="balance" id="balance">
+    <div class="bside blue" id="balBlue"><span id="balBlueText">MY TEAM</span></div>
+    <div class="bside red" id="balRed"><span id="balRedText">ENEMY</span></div>
+    <div class="bmid" id="balMid"></div>
+  </div>
+
+  <div class="layout">
+    <nav class="side">
+      <button class="navbtn" data-view="lances">LANCE SETUP</button>
+      <button class="navbtn" data-view="field">FIELD</button>
+      <button class="navbtn" data-view="board">MECH BOARD</button>
+      <button class="navbtn" data-view="records">RECORDS</button>
+      <a class="navbtn link" href="/calib" target="_blank">CALIBRATE</a>
+      <div class="navopts">
+        <label class="opt me" title="your pilot name as it shows in game — your frame is highlighted; click a pilot name to set it">PILOT<input type="text" id="meName" placeholder="your name" spellcheck="false"></label>
+        <label class="opt"><input type="checkbox" id="optMap" checked> map background</label>
+        <button id="themeBtn" class="btn ghost" title="dark / normal">DARK</button>
+        <button id="liveBtn" class="btn">LIVE: ON</button>
+        <button id="resetBtn" class="btn ghost" title="forget the current match">RESET</button>
+        <a id="donateBtn" class="btn support" href="#" target="_blank" rel="noopener" title="the app is free; a donation keeps it going">SUPPORT ♥</a>
+        <button id="aboutBtn" class="navbtn link" style="padding:6px 0 0">ABOUT</button>
+      </div>
+      <div class="navstats" id="navstats"></div>
+      <div class="navsrc"><span id="src">no frame</span><span id="ocr"></span></div>
+    </nav>
+
+    <main id="content">
+      <section id="lancesView" class="view">
+        <div class="teams">
+          <div class="teamcol mine" id="lancesMine"></div>
+          <div class="teamcol enemy" id="lancesEnemy"></div>
+        </div>
+      </section>
+      <section id="pitchWrap" class="view pitchwrap" hidden>
+        <div class="pitch" id="pitch"></div>
+      </section>
+      <section id="recordsView" class="view" hidden>
+        <div class="teamhead me"><h3>MATCH RECORDS</h3><span id="recCount"></span></div>
+        <div class="records" id="records"></div>
+      </section>
+      <section id="board" class="view" hidden>
+        <div class="boardgrid">
+          <section class="team" id="mine">
+            <h2>MY TEAM <small id="mineCount"></small></h2>
+            <div class="groups" id="mineGroups"></div>
+          </section>
+          <section class="team enemy" id="enemy">
+            <h2>ENEMY <small id="enemyCount"></small></h2>
+            <div class="groups" id="enemyGroups"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="bottom">
+    <div class="seenstrip" id="seenStrip"></div>
+    <div class="mapcard" id="mapCard"></div>
+    <div class="dropstate" id="dropState">WAITING FOR DROP</div>
+  </footer>
+</div>
+
+<div id="drop" class="drop"><div>Drop a game screenshot, a TAB screenshot or a Q-overlay screenshot here</div></div>
+<div id="note" class="note" hidden></div>
+<div id="about" class="about" hidden>
+  <div class="aboutbox">
+    <h2>LANCE<i>DECK</i> <small id="aboutVer"></small></h2>
+    <p>A free, unofficial team tracker for MechWarrior Online. It reads your own screen, nothing else: no memory reading, no input, no network calls to the game. Everything it records stays on this computer.</p>
+    <p>Mech and map pictures are imported from your own game install and never redistributed. Not affiliated with or endorsed by Piranha Games Inc. MechWarrior and BattleTech are trademarks of their owners.</p>
+    <p>If it helps you win, <a id="aboutDonate" href="#" target="_blank" rel="noopener">a donation</a> keeps it maintained through the game's patches.</p>
+    <div class="aboutrow"><a href="/setup" class="btn ghost">SETUP</a><a href="/calib" target="_blank" class="btn ghost">CALIBRATE</a><button id="aboutClose" class="btn">CLOSE</button></div>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>

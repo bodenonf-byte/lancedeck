@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+config.json
+server.log
+sightings.log
+cut.log
+scratch_*.jpg
+samples/
+records/
+# pictures come out of each player's own game install; never in the repository
+assets/mechs/
+assets/maps/*.jpg
+tools/fake_*.png

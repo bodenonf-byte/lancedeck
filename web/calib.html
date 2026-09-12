@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MWO Tracker — calibration</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .wrap { padding: 14px 18px; }
+  img.frame { max-width: 100%; border: 1px solid var(--line); }
+  .row { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; color: var(--dim); font-size: 12px; flex-wrap: wrap; }
+  input { background: var(--panel2); border: 1px solid var(--line); color: var(--ink); padding: 4px 8px; font: inherit; width: 70px; }
+  input.wide { width: 220px; }
+  pre { background: var(--panel); border: 1px solid var(--line); padding: 10px; font-size: 12px; max-height: 320px; overflow: auto; }
+  .hint { color: var(--dim); font-size: 12px; margin: 6px 0 12px; }
+</style>
+</head>
+<body>
+<header><div class="brand">MWO <span>CALIBRATION</span></div><div class="status"><span id="stats"></span><a class="btn ghost" href="/">BOARD</a></div></header>
+<div class="wrap">
+  <div class="row">
+    Pilot name <input id="my_name" class="wide" placeholder="your in-game name">
+    Panel fps <input id="fps" type="number" step="1" min="1" max="15">
+    Full read every (s) <input id="full_every" type="number" step="0.5" min="0.3" max="10">
+    Panel region x0 <input id="pr0" type="number" step="0.01" min="0" max="1"> y0 <input id="pr1" type="number" step="0.01" min="0" max="1">
+    x1 <input id="pr2" type="number" step="0.01" min="0" max="1"> y1 <input id="pr3" type="number" step="0.01" min="0" max="1">
+    <button class="btn" id="save">SAVE</button>
+    <button class="btn ghost" id="refresh">REFRESH FRAME</button>
+  </div>
+  <div class="hint">The last full frame with every OCR box (amber) and the lance-panel region the fast loop reads (cyan). The panel region must contain the whole "X LANCE" block and nothing else that matters; it is read several times a second, the rest of the screen once a second.</div>
+  <img class="frame" id="frame" src="/api/frame.jpg?boxes=1">
+  <pre id="state"></pre>
+</div>
+<script>
+async function load() {
+  const cfg = await (await fetch("/api/config")).json();
+  for (const k of ["my_name", "fps", "full_every"]) document.getElementById(k).value = cfg[k] ?? "";
+  const pr = cfg.panel_region || [0, 0, 0.36, 0.26];
+  for (let i = 0; i < 4; i++) document.getElementById("pr" + i).value = pr[i];
+  const st = await (await fetch("/api/state")).json();
+  const s = st.stats || {};
+  const t = s.target || {};
+  document.getElementById("stats").textContent = `${t.window ? "game: " + t.window + " on monitor " + t.monitor + " " + JSON.stringify(t.window_rect) : "no game window — primary monitor"} · capture ${s.capture} ${s.screen ? s.screen.join("x") : ""} · ocr ${s.ocr} · full ${s.ocr_ms} ms ×${s.frames} · panel ${s.panel_ms} ms ×${s.panel_frames} · last ${s.last_kind}${s.last_error ? " · " + s.last_error : ""}`;
+  const rows = [];
+  for (const side of ["mine", "enemy"]) for (const x of (st[side] || [])) rows.push(`${side.padEnd(5)} ${x.status.padEnd(6)} ${x.health != null ? (x.health + "%").padEnd(5) : "     "} ${(x.lance || "").padEnd(7)} ${(x.code ? x.code + "-" + x.variant : "?").padEnd(12)} ${x.name.padEnd(16)} ${x.pilot}`);
+  document.getElementById("state").textContent = (st.map ? "map: " + st.map + "\n" : "") + (rows.join("\n") || "(nothing recognised yet)");
+  document.getElementById("frame").src = "/api/frame.jpg?boxes=1&t=" + Date.now();
+}
+document.getElementById("save").onclick = async () => {
+  const body = { my_name: document.getElementById("my_name").value };
+  for (const k of ["fps", "full_every"]) body[k] = parseFloat(document.getElementById(k).value);
+  body.panel_region = [0, 1, 2, 3].map(i => parseFloat(document.getElementById("pr" + i).value));
+  await fetch("/api/config", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  load();
+};
+document.getElementById("refresh").onclick = load;
+load(); setInterval(load, 4000);
+</script>
+</body>
+</html>
