@@ -10,7 +10,7 @@ LanceDeck is a small program you run next to MechWarrior Online. While you play,
 web page up to date with what is happening to both teams: who is on your team and on the
 enemy's, which mech each pilot drives, who is still alive, how damaged the mechs you have seen
 are, and who is winning. At the end of the match it shows the results with gold, silver and
-bronze for the three best match scores, and it keeps the final screen of every match you play.
+bronze for each team's three best match scores, and it keeps the final screen of every match you play.
 
 You open the page in any browser, on a second monitor or on a phone on the same wifi, and you
 never have to alt-tab.
