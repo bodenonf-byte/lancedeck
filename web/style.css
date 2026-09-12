@@ -296,7 +296,14 @@ main#content { padding: 16px 26px 20px; display: block; }
 .pad .pl-meta { display: flex; gap: 8px; font: 700 10px/1.2 "Barlow Condensed", sans-serif; letter-spacing: .12em; color: var(--dim); margin-top: 2px; }
 .pad .pl-meta .role { color: #eef2f7; }
 .pad .pl-meta .score { color: var(--hud2); } .pad .pl-meta .hpn { color: var(--green); margin-left: auto; }
-.pad .thp { margin-top: 4px; }
+/* damage: the bar is what is left, the red track behind it what is gone */
+.pad .pl-meta .dmg { margin-left: auto; color: var(--green); }
+.pad .pl-meta .dmg.mid { color: var(--amber); } .pad .pl-meta .dmg.lo { color: var(--red); }
+.pad .pl-meta .dmg.unk { color: var(--dim); } .pad .pl-meta .dmg.dead { color: var(--red); }
+.pad .thp { margin-top: 4px; height: 6px; background: color-mix(in srgb, var(--red) 40%, #22303c); }
+.pad .thp i { background: var(--green); transition: width .4s; }
+.pad .thp.mid i { background: var(--amber); } .pad .thp.lo i { background: var(--red); }
+.pad .thp.unk, .pad .thp.dead { background: #22303c; }
 .pad.c-Light { --arm: var(--light); } .pad.c-Medium { --arm: var(--medium); } .pad.c-Heavy { --arm: var(--heavy); } .pad.c-Assault { --arm: var(--assault); }
 .pad.dead { opacity: .5; filter: grayscale(.85); }
 .pad.me { --arm: var(--amber); }

@@ -110,7 +110,11 @@ function pad(s, i) {
   const cutp = cutOf(s), pic = cutp || picOf(s), me = isMe(s);
   const role = roleOf(s);
   const hpv = hpOf(s);
-  const hp = hpv != null ? `<div class="thp"><i style="width:${hpv}%"></i></div>` : "";
+  // damage taken, as read off the lance panel / target readout: the bar is what is LEFT, the
+  // red track behind it is what is gone; nothing read yet = an empty grey bar, not a full one
+  const lvl = !s.alive ? "dead" : hpv == null ? "unk" : hpv > 66 ? "hi" : hpv > 33 ? "mid" : "lo";
+  const hp = s.code || s.alive ? `<div class="thp ${lvl}"><i style="width:${hpv != null && s.alive ? hpv : 0}%"></i></div>` : "";
+  const dmg = !s.alive ? "DESTROYED" : hpv == null ? "DMG —" : `DMG ${100 - hpv}%`;
   return `<div class="pad c-${s.cls || "Unknown"} ${s.alive ? "" : "dead"} ${me ? "me" : ""} ${s.code ? "" : "nomech"} ${cutp ? "cut" : ""} ${s.guess ? "guess" : ""} ${s.medal ? "medal" + s.medal : ""}" title="${escapeHtml(s.pilot)}${s.pros ? " · + " + escapeHtml(s.pros) + " · − " + escapeHtml(s.cons) : ""}">
     <div class="render">
       <div class="floor"></div>
@@ -126,13 +130,13 @@ function pad(s, i) {
       <span class="cls-ico">${CLASS_ICON[s.cls] || "?"}</span>
       <div class="pl-name">${s.code ? `${escapeHtml(s.name)} <b>${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""}</b>` : "MECH NOT SHOWN"}</div>
       <div class="pl-pilot">${escapeHtml(s.pilot)}</div>
-      <div class="pl-meta">${s.code ? `<span>${s.tons}t</span>` : ""}${role ? `<span class="role">${role}</span>` : ""}${s.score != null ? `<span class="score">${s.score}</span>` : ""}${hpv != null ? `<span class="hpn">${hpv}%</span>` : ""}</div>
+      <div class="pl-meta">${s.code ? `<span>${s.tons}t</span>` : ""}${role ? `<span class="role">${role}</span>` : ""}${s.score != null ? `<span class="score">${s.score}</span>` : ""}<span class="dmg ${lvl}" title="${hpv != null && s.alive ? hpv + "% left, as read off the lance panel or the target readout" : s.alive ? "no health read yet for this mech" : "destroyed"}">${dmg}</span></div>
       ${hp}
       ${loadoutOf(s) ? `<div class="pl-load" title="weapons read when this mech was locked">${escapeHtml(loadoutOf(s))}</div>` : ""}
     </div>
   </div>`;
 }
-function hpOf(s) { if (!s.alive) return null; return s.health != null ? s.health : 100; }
+function hpOf(s) { if (!s.alive || s.health == null) return null; return s.health; }   // null = nothing read yet
 function loadoutOf(s) {
   if (!s.loadout || !s.loadout.length) return "";
   const n = new Map(); for (const w of s.loadout) n.set(w, (n.get(w) || 0) + 1);
