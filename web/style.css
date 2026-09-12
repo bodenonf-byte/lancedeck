@@ -538,3 +538,30 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 
 .recright { display: flex; align-items: center; gap: 6px; margin-left: auto; flex: none; }
 .recright time { margin-left: 0; }
+
+/* ── MY MECHS ── */
+.mymechs { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 14px; }
+.mymech { --arm: var(--line); display: grid; grid-template-columns: 150px 1fr; background: rgba(12,16,22,.88); border: 1px solid var(--edge); border-left: 4px solid var(--arm);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.mymech.c-Light { --arm: var(--light); } .mymech.c-Medium { --arm: var(--medium); } .mymech.c-Heavy { --arm: var(--heavy); } .mymech.c-Assault { --arm: var(--assault); }
+.mm-pic { position: relative; background: radial-gradient(ellipse at 50% 80%, color-mix(in srgb, var(--arm) 30%, transparent), transparent 70%), #05070a; display: flex; align-items: flex-end; justify-content: center; min-height: 150px; }
+.mm-pic img { width: 92%; aspect-ratio: 1; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 10px 8px rgba(0,0,0,.7)); }
+.mm-pic span { font: 800 26px "Barlow Condensed", sans-serif; color: var(--dim); margin-bottom: 40%; }
+.mm-pic .tons { position: absolute; right: 6px; top: 6px; font: 700 11px "Barlow Condensed", sans-serif; letter-spacing: .06em; color: var(--hud2); background: rgba(0,0,0,.6); padding: 3px 5px; border: 1px solid rgba(255,255,255,.12); }
+.mm-body { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mm-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mm-head b { font: 800 18px/1 "Barlow Condensed", sans-serif; letter-spacing: .06em; color: #eef2f7; }
+.mm-head i { font: 600 13px/1 "Barlow Condensed", sans-serif; font-style: normal; color: var(--cyan); letter-spacing: .04em; }
+.mm-head .role { margin-left: auto; font: 700 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .16em; color: var(--dim); }
+.mm-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.mm-stats div { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); padding: 6px 4px; text-align: center; }
+.mm-stats b { display: block; font: 800 18px/1 "Barlow Condensed", sans-serif; color: #fff; white-space: nowrap; }
+.mm-stats b small { font-size: 10px; color: var(--dim); margin: 0 3px 0 1px; }
+.mm-stats b.good { color: var(--green); } .mm-stats b.bad { color: #ff8a7a; } .mm-stats b.medals { font-size: 14px; }
+.mm-stats span { display: block; font: 700 9px/1 "Barlow Condensed", sans-serif; letter-spacing: .16em; color: var(--dim); margin-top: 4px; }
+.mm-matches { display: flex; flex-wrap: wrap; gap: 4px; }
+.mm-matches span { font: 700 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .06em; padding: 4px 6px; border: 1px solid var(--edge); color: var(--dim); }
+.mm-matches span.victory { color: #9be2a8; border-color: color-mix(in srgb, var(--green) 50%, transparent); }
+.mm-matches span.defeat { color: #f0a59a; border-color: color-mix(in srgb, var(--red) 50%, transparent); }
+.mymech .pros { color: var(--green); font-size: 11px; } .mymech .cons { color: #f0a59a; font-size: 11px; }
+:root[data-theme="normal"] .mymech { background: rgba(255,255,255,.9); } :root[data-theme="normal"] .mm-head b, :root[data-theme="normal"] .mm-stats b { color: #1a2230; }

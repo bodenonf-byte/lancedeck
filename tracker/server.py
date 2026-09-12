@@ -449,6 +449,57 @@ def records():
     return out
 
 
+@app.get("/api/mymechs")
+def my_mechs():
+    """What the pilot has played, mech by mech, out of the records: games, wins, scores, medals,
+    survival — the MECH BOARD."""
+    me = (svc.cfg.get("my_name") if svc else "") or ""
+    key = re.sub(r"[^a-z0-9]", "", me.lower())
+    mechs: dict[str, dict] = {}
+    total = {"games": 0, "wins": 0, "losses": 0, "score": 0, "best": 0, "medals": [0, 0, 0], "survived": 0}
+    if not key or not os.path.isdir(RECORDS):
+        return {"pilot": me, "total": total, "mechs": []}
+    for f in sorted(os.listdir(RECORDS)):
+        if not f.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(RECORDS, f), encoding="utf-8") as fh:
+                d = json.load(fh)
+        except Exception:
+            continue
+        mine = d.get("mine", [])
+        s = next((x for x in mine if key and (key in re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) or re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) in key) and len(re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower())) >= 3), None)
+        if not s or not s.get("code"):
+            continue
+        mid = f"{s['code']}-{s.get('variant') or ''}".rstrip("-")
+        m = mechs.setdefault(mid, {"key": mid, "code": s["code"], "variant": s.get("variant") or "", "name": s.get("name"), "tons": s.get("tons"), "cls": s.get("cls"),
+                                   "faction": s.get("faction"), "pros": s.get("pros"), "cons": s.get("cons"),
+                                   "games": 0, "wins": 0, "losses": 0, "scores": [], "best": 0, "medals": [0, 0, 0], "survived": 0, "last": 0, "matches": []})
+        res = d.get("result", "")
+        m["games"] += 1; total["games"] += 1
+        if res == "VICTORY": m["wins"] += 1; total["wins"] += 1
+        elif res == "DEFEAT": m["losses"] += 1; total["losses"] += 1
+        if s.get("score") is not None:
+            m["scores"].append(s["score"]); total["score"] += s["score"]
+            m["best"] = max(m["best"], s["score"]); total["best"] = max(total["best"], s["score"])
+        if s.get("medal"):
+            m["medals"][s["medal"] - 1] += 1; total["medals"][s["medal"] - 1] += 1
+        if s.get("alive"):
+            m["survived"] += 1; total["survived"] += 1
+        m["last"] = max(m["last"], d.get("started") or d.get("saved") or 0)
+        m["matches"].append({"match_id": d.get("match_id", f[:-5]), "map": d.get("map"), "mode": d.get("mode"), "result": res, "score": s.get("score"), "medal": s.get("medal", 0), "alive": s.get("alive"), "started": d.get("started") or d.get("saved")})
+    out = []
+    for m in mechs.values():
+        m["avg"] = round(sum(m["scores"]) / len(m["scores"])) if m["scores"] else None
+        m["scored"] = len(m["scores"]); del m["scores"]
+        m["matches"].sort(key=lambda x: -(x["started"] or 0))
+        out.append(m)
+    out.sort(key=lambda m: (-m["games"], -m["last"]))
+    scored_games = sum(m["scored"] for m in out)
+    total["avg"] = round(total["score"] / scored_games) if scored_games else None
+    return {"pilot": me, "total": total, "mechs": out}
+
+
 @app.get("/api/records/{match_id}")
 def record(match_id: str):
     p = os.path.join(RECORDS, os.path.basename(match_id) + ".json")

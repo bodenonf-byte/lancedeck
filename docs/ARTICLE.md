@@ -65,15 +65,11 @@ pad with its name, variant, pilot, tonnage, role and health. Your own seat is fr
 Below each team, an overview: tonnage, the weight-class mix as a radar, capabilities like ECM,
 jump jets, brawl and sniper, and a short analysis of the composition.
 
-![Field view](img/field.png)
+![My mechs](img/board.png)
 
-**Field** puts the twelve seats of each side on a football pitch, your goal at the bottom, the
-enemy's at the top.
-
-![Mech board](img/board.png)
-
-**Mech board** lists both teams as cards by weight class, with the strengths and weaknesses of
-each chassis.
+**My mechs** is your own record: every mech you have played, with games, wins and losses,
+average and best match score, medals and how often you survived, plus the last results one by
+one.
 
 ![Records](img/records.png)
 

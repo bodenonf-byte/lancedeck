@@ -26,8 +26,7 @@
   <div class="layout">
     <nav class="side">
       <button class="navbtn" data-view="lances">LANCE SETUP</button>
-      <button class="navbtn" data-view="field">FIELD</button>
-      <button class="navbtn" data-view="board">MECH BOARD</button>
+      <button class="navbtn" data-view="board">MY MECHS</button>
       <button class="navbtn" data-view="records">RECORDS</button>
       <a class="navbtn link" href="/calib" target="_blank">CALIBRATE</a>
       <div class="navopts">
@@ -50,24 +49,13 @@
           <div class="teamcol enemy" id="lancesEnemy"></div>
         </div>
       </section>
-      <section id="pitchWrap" class="view pitchwrap" hidden>
-        <div class="pitch" id="pitch"></div>
-      </section>
       <section id="recordsView" class="view" hidden>
         <div class="teamhead me"><h3>MATCH RECORDS</h3><span id="recCount"></span></div>
         <div class="records" id="records"></div>
       </section>
       <section id="board" class="view" hidden>
-        <div class="boardgrid">
-          <section class="team" id="mine">
-            <h2>MY TEAM <small id="mineCount"></small></h2>
-            <div class="groups" id="mineGroups"></div>
-          </section>
-          <section class="team enemy" id="enemy">
-            <h2>ENEMY <small id="enemyCount"></small></h2>
-            <div class="groups" id="enemyGroups"></div>
-          </section>
-        </div>
+        <div class="teamhead me"><h3>MY MECHS</h3><span id="myTotal"></span></div>
+        <div class="mymechs" id="myMechs"></div>
       </section>
     </main>
   </div>

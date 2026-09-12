@@ -12,7 +12,7 @@ Promise.all([loadAssets(), fetch("/static/roles.json").then(r => r.json()).then(
 // ── options, remembered per browser ──────────────────────────────────────────────────
 const prefs = (() => { try { return JSON.parse(localStorage.getItem("mwo-tracker") || "{}"); } catch (e) { return {}; } })();
 function savePrefs() { try { localStorage.setItem("mwo-tracker", JSON.stringify(prefs)); } catch (e) {} }
-const VIEWS = {lances: "lancesView", field: "pitchWrap", board: "board", records: "recordsView"};
+const VIEWS = {lances: "lancesView", board: "board", records: "recordsView"};
 function applyPrefs() {
   document.documentElement.dataset.theme = prefs.theme || "dark";
   const view = VIEWS[prefs.view] ? prefs.view : "lances";
@@ -20,9 +20,9 @@ function applyPrefs() {
   document.querySelectorAll(".navbtn[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === view));
   document.getElementById("themeBtn").textContent = (prefs.theme || "dark").toUpperCase();
   document.getElementById("optMap").checked = prefs.mapbg !== false;
-  document.getElementById("pitch").classList.add("field");
   paintMap(lastMap);
   if (view === "records") loadRecords();
+  if (view === "board") loadMyMechs();
 }
 document.querySelectorAll(".navbtn[data-view]").forEach(b => b.onclick = () => { prefs.view = b.dataset.view; savePrefs(); applyPrefs(); });
 document.getElementById("themeBtn").onclick = () => { prefs.theme = (prefs.theme || "dark") === "dark" ? "normal" : "dark"; savePrefs(); applyPrefs(); };
@@ -233,120 +233,6 @@ function renderLances(d) {
   renderTeam("lancesEnemy", d.enemy || [], true, d);
 }
 
-// ── MECH BOARD: cards by class ────────────────────────────────────────────────────────
-function card(s) {
-  const pic = picOf(s);
-  const me = isMe(s) ? " me" : "";
-  const you = me ? '<span class="you">YOU</span>' : "";
-  const hpc = hpOf(s);
-  const hp = hpc != null ? `<div class="hp"><i style="width:${hpc}%"></i><b>${hpc}%</b></div>` : "";
-  const state = !s.alive ? '<div class="skull">DESTROYED</div>' : (s.status === "SEEN" ? '<div class="seen">SPOTTED</div>' : "");
-  if (!s.code) {
-    return `<div class="card unknown ${s.alive ? "" : "dead"}${me}">
-      <div class="pic"><div class="ph">?</div>${you}${state}</div>
-      <div class="body"><div class="mech">mech not shown</div><div class="pilot">${escapeHtml(s.pilot)}</div><div class="pros">status: ${s.status}</div></div>
-    </div>`;
-  }
-  return `
-  <div class="card ${s.alive ? "" : "dead"} f-${s.faction}${me}${s.guess ? " guess" : ""}${s.medal ? " medal" + s.medal : ""}">
-    <div class="pic">
-      ${pic ? `<img src="${pic}" alt="">` : ""}
-      <div class="ph">${s.code}</div>
-      <div class="badge">${s.tons}t</div>
-      ${you}
-      ${medalOf(s)}
-      ${state}
-    </div>
-    <div class="body">
-      <div class="mech">${s.name} <span class="var">${s.code}-${s.variant}</span>${s.lance ? `<span class="lance">${s.lance}</span>` : ""}</div>
-      <div class="pilot">${escapeHtml(s.pilot)}</div>
-      ${hp}
-      ${loadoutOf(s) ? `<div class="load">⚔ ${escapeHtml(loadoutOf(s))}</div>` : ""}
-      <div class="pros">+ ${s.pros}</div>
-      <div class="cons">&minus; ${s.cons}</div>
-    </div>
-  </div>`;
-}
-function renderSide(id, slots) {
-  const host = document.getElementById(id + "Groups");
-  const alive = slots.filter(s => s.alive).length;
-  document.getElementById(id + "Count").textContent = slots.length ? `${alive} / ${slots.length} alive` : "";
-  let html = "";
-  for (const cls of CLASSES) {
-    const group = slots.filter(s => s.cls === cls);
-    if (!group.length) continue;
-    const tons = group.reduce((a, s) => a + s.tons, 0);
-    const title = cls === "Unknown" ? "PILOTS (MECH NOT SHOWN)" : cls.toUpperCase();
-    html += `<div class="group g-${cls}"><h3>${title} <small>${group.length}${tons ? " · " + tons + "t" : ""}</small></h3><div class="cards">${group.map(card).join("")}</div></div>`;
-  }
-  host.innerHTML = html || `<div class="empty">nothing recognised yet</div>`;
-}
-
-// ── FIELD: the football pitch, twelve fixed seats a side ─────────────────────────────
-function formationOf(slots) {
-  return ["Light", "Medium", "Heavy", "Assault"].map(c => slots.filter(s => s.cls === c).length).join("-");
-}
-function tile(s) {
-  const pic = picOf(s);
-  const cls = `tile ${s.alive ? "" : "dead"} ${s.code ? "" : "unknown"} c-${s.cls} ${s.medal ? "medal" + s.medal : ""} ${isMe(s) ? "me" : ""} ${s.guess ? "guess" : ""}`;
-  const hpt = hpOf(s);
-  const hp = hpt != null ? `<div class="thp"><i style="width:${hpt}%"></i></div>` : "";
-  return `<div class="${cls}" title="${escapeHtml(s.pilot)} · ${s.code ? s.name + " " + s.code + "-" + s.variant : "mech not shown"}${s.pros ? " · + " + s.pros + " · − " + s.cons : ""}">
-    ${medalOf(s)}
-    <div class="tpic">${pic ? `<img src="${pic}" alt="">` : `<span class="tcode">${s.code || (s.variant || "?")}</span>`}<b class="tnum">${s.code ? s.tons : ""}</b>${isMe(s) ? '<span class="you">YOU</span>' : ""}${s.alive ? "" : '<span class="tx">✕</span>'}</div>
-    <div class="tname">${s.code ? escapeHtml(s.name) + ' <b class="tvar">' + s.code + (s.variant ? '-' + escapeHtml(s.variant) : '') + '</b>' : escapeHtml(s.pilot)}</div>
-    <div class="tsub">${s.code ? escapeHtml(s.pilot) : (s.variant ? escapeHtml(s.variant) + " (unknown chassis)" : "mech not shown")}${s.score != null ? " · " + s.score : ""}</div>
-    ${hp}
-  </div>`;
-}
-function emptySeat(i) {
-  return `<div class="tile seat"><div class="tpic"><span class="tcode">${i + 1}</span></div><div class="tname">open seat</div><div class="tsub">&nbsp;</div></div>`;
-}
-function half(slots) {
-  const seats = slots.slice(0, 12);
-  const rows = [];
-  for (let r = 0; r < 3; r++) rows.push([0, 1, 2, 3].map(c => seats[r * 4 + c] ? tile(seats[r * 4 + c]) : emptySeat(r * 4 + c)));
-  return rows.map(r => `<div class="line">${r.join("")}</div>`).join("");
-}
-function fieldSvg() {
-  const W = 100, H = 150, m = 4;
-  const L = m, R = W - m, T = m, B = H - m, cx = W / 2;
-  const pen = 16.5 * (W - 2 * m) / 68, six = 5.5 * (W - 2 * m) / 68;
-  const penW = 40.3 * (W - 2 * m) / 68, sixW = 18.3 * (W - 2 * m) / 68, goalW = 7.32 * (W - 2 * m) / 68;
-  const spot = 11 * (W - 2 * m) / 68, r = 9.15 * (W - 2 * m) / 68;
-  const a = r * r - (pen - spot) * (pen - spot), half_ = a > 0 ? Math.sqrt(a) : 0;
-  const box = (y, dir) => `
-    <rect x="${cx - penW / 2}" y="${dir > 0 ? y : y - pen}" width="${penW}" height="${pen}"/>
-    <rect x="${cx - sixW / 2}" y="${dir > 0 ? y : y - six}" width="${sixW}" height="${six}"/>
-    <circle class="spot" cx="${cx}" cy="${y + dir * spot}" r=".5"/>
-    ${half_ ? `<path d="M ${cx - half_} ${y + dir * pen} A ${r} ${r} 0 0 ${dir > 0 ? 0 : 1} ${cx + half_} ${y + dir * pen}"/>` : ""}
-    <g class="goal"><rect x="${cx - goalW / 2}" y="${dir > 0 ? y - m + .8 : y}" width="${goalW}" height="${m - .8}"/>
-      <path d="${Array.from({length: 7}, (_, i) => `M ${cx - goalW / 2 + (i + 1) * goalW / 8} ${dir > 0 ? y - m + .8 : y} v ${m - .8}`).join(" ")} ${Array.from({length: 3}, (_, i) => `M ${cx - goalW / 2} ${(dir > 0 ? y - m + .8 : y) + (i + 1) * (m - .8) / 4} h ${goalW}`).join(" ")}"/></g>`;
-  const corner = (x, y, sx, sy) => `<path d="M ${x} ${y + sy * 2} A 2 2 0 0 ${sx * sy > 0 ? 0 : 1} ${x + sx * 2} ${y}"/>`;
-  return `<svg class="fieldsvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-    <defs><pattern id="grass" width="${W}" height="${(H - 2 * m) / 10}" patternUnits="userSpaceOnUse" y="${m}">
-      <rect width="${W}" height="${(H - 2 * m) / 20}" class="g1"/><rect y="${(H - 2 * m) / 20}" width="${W}" height="${(H - 2 * m) / 20}" class="g2"/></pattern></defs>
-    <rect class="turf" x="0" y="${m}" width="${W}" height="${H - 2 * m}" fill="url(#grass)"/>
-    <g class="lines">
-      <rect x="${L}" y="${T}" width="${R - L}" height="${B - T}"/>
-      <line x1="${L}" y1="${H / 2}" x2="${R}" y2="${H / 2}"/>
-      <circle cx="${cx}" cy="${H / 2}" r="${r}"/><circle class="spot" cx="${cx}" cy="${H / 2}" r=".5"/>
-      ${box(T, 1)}${box(B, -1)}
-      ${corner(L, T, 1, 1)}${corner(R, T, -1, 1)}${corner(L, B, 1, -1)}${corner(R, B, -1, -1)}
-    </g></svg>`;
-}
-function renderPitch(d) {
-  const mine = d.mine || [], enemy = d.enemy || [];
-  const aliveM = mine.filter(s => s.alive).length, aliveE = enemy.filter(s => s.alive).length;
-  document.getElementById("pitch").innerHTML = fieldSvg() + `
-    <div class="ptitle"><span class="me">MY TEAM <small>${formationOf(mine)} · ${aliveM}/${mine.length} alive</small></span>
-      <span class="vs">${d.result ? `<b class="result ${d.result.toLowerCase()}">${d.result}</b> · ` : ""}${d.map ? escapeHtml(d.map) : "VS"}${d.mode ? " · " + escapeHtml(d.mode) : ""}</span>
-      <span class="foe">ENEMY <small>${enemy.length ? formationOf(enemy) + " · " + aliveE + "/" + enemy.length + " alive" : "not seen yet"}${d.frozen ? " · 🔒" : ""}</small></span></div>
-    <div class="half top">${half(enemy)}</div>
-    <div class="midline"></div>
-    <div class="half bottom">${half(mine)}</div>`;
-}
-
 // ── RECORDS: the final screen of every match, newest first ──────────────────────────
 let recordsV = -1, recordsBusy = false;
 function fmtDate(ts) { const d = new Date((ts || 0) * 1000); return d.toLocaleDateString(undefined, {weekday: "short", day: "2-digit", month: "short"}) + " · " + d.toLocaleTimeString(undefined, {hour: "2-digit", minute: "2-digit"}); }
@@ -392,6 +278,44 @@ document.getElementById("records").addEventListener("click", async e => {
   await fetch("/api/records/" + encodeURIComponent(b.dataset.id), {method: "DELETE"});
   loadRecords();
 });
+
+// ── MY MECHS: what the pilot has played, mech by mech, out of the records ──────────────
+let myMechsBusy = false;
+async function loadMyMechs() {
+  if (myMechsBusy) return; myMechsBusy = true;
+  try {
+    const d = await fetch("/api/mymechs").then(r => r.json());
+    const t = d.total || {};
+    document.getElementById("myTotal").textContent = t.games
+      ? `${escapeHtml(d.pilot).toUpperCase()} · ${t.games} GAME${t.games > 1 ? "S" : ""} · ${t.wins} W / ${t.losses} L${t.avg != null ? " · AVG SCORE " + t.avg : ""}${t.best ? " · BEST " + t.best : ""} · ${MEDAL[1]} ${t.medals[0]} ${MEDAL[2]} ${t.medals[1]} ${MEDAL[3]} ${t.medals[2]}`
+      : (d.pilot ? "NO MATCH RECORDED YET FOR " + escapeHtml(d.pilot).toUpperCase() : "SET YOUR PILOT NAME FIRST");
+    const host = document.getElementById("myMechs");
+    if (!d.mechs || !d.mechs.length) { host.innerHTML = '<div class="empty">Your mechs appear here after the first match whose results screen was read. Stay on the results a couple of seconds at the end of a match.</div>'; return; }
+    host.innerHTML = d.mechs.map(m => {
+      const s = {code: m.code, variant: m.variant, cls: m.cls};
+      const pic = cutOf(s) || picOf(s);
+      const wr = m.wins + m.losses ? Math.round(100 * m.wins / (m.wins + m.losses)) : null;
+      const surv = m.games ? Math.round(100 * m.survived / m.games) : 0;
+      return `<article class="mymech c-${m.cls}">
+        <div class="mm-pic">${pic ? `<img src="${pic}" alt="">` : `<span>${m.code}</span>`}<b class="tons">${m.tons}t</b></div>
+        <div class="mm-body">
+          <div class="mm-head"><b>${escapeHtml(m.name || m.code)}</b><i>${m.code}${m.variant ? "-" + escapeHtml(m.variant) : ""}</i><span class="role">${roleOf(s)}</span></div>
+          <div class="mm-stats">
+            <div><b>${m.games}</b><span>GAMES</span></div>
+            <div><b class="${wr == null ? "" : wr >= 50 ? "good" : "bad"}">${m.wins}<small>W</small> ${m.losses}<small>L</small></b><span>${wr != null ? wr + "% WIN" : "RESULT"}</span></div>
+            <div><b>${m.avg != null ? m.avg : "–"}</b><span>AVG SCORE</span></div>
+            <div><b>${m.best || "–"}</b><span>BEST</span></div>
+            <div><b>${surv}%</b><span>SURVIVED</span></div>
+            <div><b class="medals">${m.medals[0] ? MEDAL[1] + m.medals[0] : ""}${m.medals[1] ? " " + MEDAL[2] + m.medals[1] : ""}${m.medals[2] ? " " + MEDAL[3] + m.medals[2] : ""}${!m.medals.some(x => x) ? "–" : ""}</b><span>MEDALS</span></div>
+          </div>
+          <div class="mm-matches">${m.matches.slice(0, 8).map(x => `<span class="${(x.result || "").toLowerCase()}" title="${escapeHtml(x.map || "")} · ${escapeHtml(x.mode || "")}${x.score != null ? " · score " + x.score : ""}${x.alive ? "" : " · destroyed"}">${x.result === "VICTORY" ? "W" : x.result === "DEFEAT" ? "L" : "·"}${x.medal ? MEDAL[x.medal] : ""}${x.score != null ? " " + x.score : ""}</span>`).join("")}</div>
+          ${m.pros ? `<div class="pros">+ ${escapeHtml(m.pros)}</div><div class="cons">&minus; ${escapeHtml(m.cons || "")}</div>` : ""}
+        </div>
+      </article>`;
+    }).join("");
+  } catch (e) { /* the helper may be restarting */ }
+  myMechsBusy = false;
+}
 
 // ── the bottom strip: spotted mechs, the map card, the match state ───────────────────
 function renderFooter(d) {
@@ -450,9 +374,6 @@ function apply(d) {
   }
   renderBalance(d);
   renderLances(d);
-  renderSide("mine", d.mine || []);
-  renderSide("enemy", d.enemy || []);
-  renderPitch(d);
   renderFooter(d);
   if (d.records_v != null && d.records_v !== recordsV) { recordsV = d.records_v; if ((prefs.view || "lances") === "records") loadRecords(); }
   lastMap = d.map || ""; paintMap(lastMap);
@@ -461,7 +382,7 @@ function apply(d) {
   document.getElementById("liveBtn").textContent = "LIVE: " + (d.live ? "ON" : "OFF");
   document.getElementById("liveBtn").classList.toggle("off", !d.live);
   const note = document.getElementById("note"); note.textContent = d.note || ""; note.hidden = !d.note;
-  document.getElementById("enemy").style.display = (d.enemy && d.enemy.length) ? "" : "none";
+  if (d.records_v != null && (prefs.view || "lances") === "board") loadMyMechs();
 }
 
 // ?demo=1 shows a canned match (for screenshots and a first look); ?view=lances|field|board|records picks the view

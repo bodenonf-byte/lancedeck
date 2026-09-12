@@ -20,13 +20,9 @@ first run and are never redistributed with this app.
 
 ![Lance setup](docs/img/lances.png)
 
-**Field** — the twelve seats of each side on a pitch, your goal at the bottom.
+**My mechs** — the mechs you have played, with games, wins, scores, medals and survival out of your records.
 
-![Field](docs/img/field.png)
-
-**Mech board** — cards by weight class with the strengths and weaknesses of each chassis.
-
-![Mech board](docs/img/board.png)
+![My mechs](docs/img/board.png)
 
 **Records** — every match's final screen, result, survivors, your score and each team's medallists; each record unfolds into the board of that match.
 
@@ -53,8 +49,8 @@ screen a couple of seconds at the end so the record is written.
 
 - **Lance setup**: both teams, Alpha / Bravo / Charlie, mechs standing on their pads, team
   overview with tonnage, class mix and capabilities.
-- **Field**: the twelve seats of each side on a football pitch.
-- **Mech board**: cards by weight class with pros and cons.
+- **My mechs**: every mech you have played, with games, wins, average and best score, medals and
+  survival, out of your records.
 - **Records**: every match's final screen, results and medal winners, with the board of that
   match; the last five games also remember which pilot drove which mech.
 
