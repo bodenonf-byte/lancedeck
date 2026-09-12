@@ -90,6 +90,12 @@ unless specifically requested by the user or the person installing or operating 
 the game window on the local machine and serves a page to the local browser; it makes no other
 network connections.
 
+## Licence
+
+GNU General Public License v3.0. You may use, study, share and improve LanceDeck freely; anyone
+who distributes it, or a program built from it, must offer the source under the same licence.
+See LICENSE.
+
 ## Credits
 
 Lance emblems by Lorc and Delapouite from [game-icons.net](https://game-icons.net), CC BY 3.0.

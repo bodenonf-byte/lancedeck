@@ -2,7 +2,7 @@
 
 SignPath Foundation signs releases of open-source projects for free. Their certificate is trusted
 by Windows, the reputation builds across all projects they sign, and there is no country
-restriction. The requirements are all met here: public repository, OSI licence (MIT), releases
+restriction. The requirements are all met here: public repository, OSI licence (GPL-3.0), releases
 built by a CI pipeline from the public source, and the code signing policy in the README.
 
 ## 1. Apply (you)
@@ -13,7 +13,7 @@ Go to https://signpath.org/apply and fill in the form:
 |---|---|
 | Project name | LanceDeck |
 | Repository | https://github.com/bodenonf-byte/lancedeck |
-| Licence | MIT |
+| Licence | GPL-3.0 |
 | Description | Free, unofficial team tracker for MechWarrior Online. Reads the player's own screen locally (OCR) and shows both teams as lances, live; records every match. No memory reading, no input, nothing online. |
 | Build system | GitHub Actions (`.github/workflows/release.yml`) |
 | Artifacts | `LanceDeck-<version>-win64.zip` containing `LanceDeck.exe` (PyInstaller) |
