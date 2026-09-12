@@ -44,6 +44,18 @@ the page. A shortcut to the exe on the desktop or in the Start menu is the conve
 
 If Windows SmartScreen shows "Windows protected your PC", click **More info** then **Run anyway**: releases are being moved to builds signed through SignPath Foundation (docs/SIGNPATH.md); until then the warning only means Windows does not know the publisher yet.
 
+## If it does not start
+
+- **Extracting the zip takes a few minutes.** It holds about 1,400 files and Windows scans each
+  one as it comes out. Wait until Explorer's progress window is gone before running the exe.
+- **"Failed to load Python DLL … Access is denied"** means Windows Defender is still checking
+  that file. Wait a minute and run the exe again. If it persists, delete the folder and extract
+  the zip again, or extract it with 7-Zip.
+- **Nothing opens in the browser**: click the tray icon next to the clock, or open
+  `http://localhost:8765` yourself.
+- **The page says the game is not found**: the game must be running; the tracker looks for its
+  window every few seconds and starts reading as soon as it is there.
+
 ## What it needs from you in game
 
 Nothing you do not already do. Press **TAB** once at the start so both teams are read (the
