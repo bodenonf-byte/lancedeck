@@ -58,6 +58,14 @@ The mech pictures and the map backgrounds are yours too: on first run, LanceDeck
 icons and the loading-screen art out of the game files already installed on your PC. They are
 never included in the download and never shared.
 
+## How it is built
+
+Python. Screen capture with Desktop Duplication, text recognition with RapidOCR, an ONNX model
+run on the processor by default so the graphics card stays with the game, a small web server
+that pushes updates to the page, and a plain web page. It is packaged into one folder with
+PyInstaller. Releases are built by GitHub Actions on a clean Windows machine from the public
+source, so anyone can check that the download matches the code. Licence GPL-3.0.
+
 ## The views
 
 **Lance setup** is the main view: both teams as three lances of four, every mech standing on its

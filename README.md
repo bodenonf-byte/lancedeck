@@ -54,6 +54,20 @@ screen a couple of seconds at the end so the record is written.
 - **Records**: every match's final screen, results and medal winners, with the board of that
   match; the last five games also remember which pilot drove which mech.
 
+## How it is built
+
+Python. Screen capture with Desktop Duplication (`dxcam`), text recognition with RapidOCR, an
+ONNX model run on the CPU by default so the GPU stays with the game, a small FastAPI server that
+pushes updates to the page over a websocket, and a plain HTML and JavaScript page. It is packaged
+into a single folder with PyInstaller. Releases are built by GitHub Actions on a clean Windows
+runner from this public source, so anyone can check that the download matches the code.
+
+The pipeline, in order: `tracker/capture.py` finds the game window and grabs frames,
+`tracker/ocr.py` reads the text, `tracker/match.py` turns the lines into a scoreboard, lance
+panel, Q overlay, target readout or results screen, `tracker/roster.py` keeps the two teams
+consistent across reads, `tracker/server.py` serves the page and writes the records, and
+`web/` is the page.
+
 ## Performance
 
 Runs in quiet mode by default: OCR on the CPU on four threads at a low priority so the GPU
