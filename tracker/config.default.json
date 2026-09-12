@@ -18,7 +18,7 @@
     1.0
   ],
   "live": true,
-  "ocr_threads": 4,
+  "ocr_threads": 6,
   "target_region": [
     0.64,
     0.0,
@@ -26,5 +26,6 @@
     0.28
   ],
   "donate_url": "https://github.com/sponsors/bodenonf-byte",
-  "capture": "window"
+  "capture": "window",
+  "ocr_threads_panel": 4
 }
