@@ -25,6 +25,8 @@ from .paths import LOG
 
 def _log(kind: str, s) -> None:
     try:
+        if os.path.exists(LOG) and os.path.getsize(LOG) > 5_000_000:   # keep the log bounded: roll it once
+            os.replace(LOG, LOG + ".1")
         with open(LOG, "a", encoding="utf-8") as f:
             f.write(f"{time.strftime('%H:%M:%S')} {kind:10s} {s.code or '?'}-{s.variant:<8s} {s.name:<16s} pilot={s.pilot!r:28s} hp={s.health} st={s.status} conf={s.conf:.2f} | {s.raw}\n")
     except Exception:
