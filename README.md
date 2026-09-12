@@ -14,6 +14,24 @@ Not affiliated with or endorsed by Piranha Games Inc. MechWarrior and BattleTech
 of their respective owners. Mech and map pictures are copied out of *your own* game install on
 first run and are never redistributed with this app.
 
+## What it looks like
+
+**Lance setup** — both teams as three lances of four, every mech on its pad with pilot, tonnage, role, health and the enemy loadouts you have locked. Your seat is framed in amber, medallists in gold, silver and bronze.
+
+![Lance setup](docs/img/lances.png)
+
+**Field** — the twelve seats of each side on a pitch, your goal at the bottom.
+
+![Field](docs/img/field.png)
+
+**Mech board** — cards by weight class with the strengths and weaknesses of each chassis.
+
+![Mech board](docs/img/board.png)
+
+**Records** — every match's final screen, result, survivors, your score and each team's medallists; each record unfolds into the board of that match.
+
+![Records](docs/img/records.png)
+
 ## Install
 
 1. Download the latest release zip and unpack it anywhere.
