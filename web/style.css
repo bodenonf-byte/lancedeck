@@ -535,3 +535,6 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .rechead { align-items: center; }
 .rec .recboard, .rec .recdel { position: static; margin-left: 6px; flex: none; }
 .rechead time { margin-left: auto; }
+
+.recright { display: flex; align-items: center; gap: 6px; margin-left: auto; flex: none; }
+.recright time { margin-left: 0; }
