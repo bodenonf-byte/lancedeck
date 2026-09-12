@@ -23,6 +23,16 @@ immediately, and every later build inherits that trust. Cost is about 10 USD a m
 6. **Endpoint.** On the account's overview page, copy the *Account URI*, for instance
    `https://weu.codesigning.azure.net`.
 
+## Paying for one month only
+
+Trusted Signing is billed month by month with no commitment. A signature carries a timestamp
+from Microsoft's timestamp server, so a build signed today stays valid and trusted forever, even
+after you cancel: Windows checks that the certificate was valid at signing time, not today. So
+the routine is: subscribe, sign the release, cancel. The next time you want to sign a new
+release, subscribe again for a month; the identity validation stays on file for a year, so
+that part is not repeated. Only the exe you sign while subscribed is signed; an unsigned build
+made in between warns like before.
+
 ## Signing from this PC
 
 ```

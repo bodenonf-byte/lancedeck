@@ -41,7 +41,7 @@ first run and are never redistributed with this app.
    their backdrop (a few minutes, once).
 4. Play. Keep the page on a second screen or open `http://<this-pc>:8765` on a phone.
 
-Windows may warn about an unsigned program the first time; the build is not code-signed.
+If Windows SmartScreen shows "Windows protected your PC", click **More info** then **Run anyway**: releases are moving to a signed build (docs/SIGNING.md); until then the warning only means Windows does not know the publisher yet.
 
 ## What it needs from you in game
 
