@@ -296,7 +296,8 @@ main#content { padding: 16px 26px 20px; display: block; }
 .pad .pl-meta { display: flex; gap: 8px; font: 700 10px/1.2 "Barlow Condensed", sans-serif; letter-spacing: .12em; color: var(--dim); margin-top: 2px; }
 .pad .pl-meta .role { color: #eef2f7; }
 .pad .pl-meta .score { color: var(--hud2); } .pad .pl-meta .hpn { color: var(--green); margin-left: auto; }
-/* damage: the bar is what is left, the red track behind it what is gone */
+.pad .pl-meta .dealt { color: var(--hud2); font-weight: 800; }          /* damage dealt, results table */
+/* health: the bar is what is left, the red track behind it what is gone */
 .pad .pl-meta .dmg { margin-left: auto; color: var(--green); }
 .pad .pl-meta .dmg.mid { color: var(--amber); } .pad .pl-meta .dmg.lo { color: var(--red); }
 .pad .pl-meta .dmg.unk { color: var(--dim); } .pad .pl-meta .dmg.dead { color: var(--red); }

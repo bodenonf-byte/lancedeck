@@ -136,6 +136,7 @@ class Slot:
     y: int
     raw: str = ""           # the OCR row the read came from, for the sightings log
     score: int | None = None
+    damage: int | None = None   # damage dealt, from the end-of-match table's DMG column only
     medal: int = 0          # 1 gold, 2 silver, 3 bronze — the end-of-match table's top three
     locked: bool = False    # the mech came from a named source and stays
     guess: bool = False     # the mech is a supposition from a recent game, not read this match
@@ -417,6 +418,35 @@ def row_numbers(row, after_x: int) -> list[int]:
     return out
 
 
+def _column_x(rows, pat: str) -> float | None:
+    """Centre x of the first OCR line matching pat — a column header of the results table."""
+    rx = re.compile(pat)
+    for row in rows:
+        for l in row:
+            if rx.search(l.text.upper()):
+                return (l.x0 + l.x1) / 2
+    return None
+
+
+def _damage(row, after_x: int, dmg_x: float | None, tol: float) -> int | None:
+    """The DMG cell of a results row: the number under the DMG header (nearest to it, within
+    tol), else — no header read — the second-to-last number, the results table's columns
+    being MATCH SCORE, CAPTURE TIME, KILLS, ASSISTS, DMG, PING."""
+    cells = []
+    for l in sorted(row, key=lambda l: l.x0):
+        if l.x0 < after_x or "%" in l.text or TIME_TOKEN.search(l.text):
+            continue
+        t = strip_codes(l.text)
+        for m in NUM.finditer(t):
+            cells.append(((l.x0 + l.x1) / 2, int(m.group(1))))
+    if not cells:
+        return None
+    if dmg_x is not None:
+        cx, val = min(cells, key=lambda c: abs(c[0] - dmg_x))
+        return val if abs(cx - dmg_x) <= tol else None
+    return cells[-2][1] if len(cells) >= 5 else None
+
+
 def scoreboard(rows, texts, img, db, my_name, bx0, bx1, source, scored: bool | None = None) -> TeamState:
     slots: list[Slot] = []
     lance = ""
@@ -425,6 +455,8 @@ def scoreboard(rows, texts, img, db, my_name, bx0, bx1, source, scored: bool | N
         m = END_TABLE.search(t)
         if m and m.group(1) in ("VICTORY", "DEFEAT", "TIE", "DRAW"):
             result = m.group(1)
+    dmg_x = _column_x(rows, r"\bDMG\b|\bDAMAGE\b")           # the results table's DMG column, when its header is on
+    dmg_tol = img.width * 0.04
     for row, up in zip(rows, texts):
         if CHAT.search(up):
             continue                                        # the chat / kill feed under the table
@@ -453,6 +485,7 @@ def scoreboard(rows, texts, img, db, my_name, bx0, bx1, source, scored: bool | N
             sl = Slot(pilot or "?", ch.code, variant, ch.name, ch.tons, ch.cls, ch.faction, ch.pros, ch.cons,
                       status != "DEAD", status, None, lance, br, conf, cy, up)
             sl.score = nums[0] if nums else None
+            sl.damage = _damage(row, code_line.x0 + 1, dmg_x, dmg_tol)
             slots.append(sl)
         else:
             joined = " ".join(l.text for l in row)
@@ -468,6 +501,7 @@ def scoreboard(rows, texts, img, db, my_name, bx0, bx1, source, scored: bool | N
                 sl.variant = unknown_code; sl.raw = up
                 nums = row_numbers(row, max((l.x1 for l in row if mm and mm.group(0) in l.text.upper()), default=0) + 1) if mm else []
                 sl.score = nums[0] if nums else None
+                sl.damage = _damage(row, max((l.x1 for l in row if mm.group(0) in l.text.upper()), default=0) + 1, dmg_x, dmg_tol) if mm else None
                 slots.append(sl)
     # which block is which
     slots.sort(key=lambda s: s.y)
@@ -528,7 +562,7 @@ def scoreboard(rows, texts, img, db, my_name, bx0, bx1, source, scored: bool | N
                 s.medal = i + 1
     else:
         for s in mine + enemy:
-            s.score = None                                  # the in-match TAB's first number is the ping
+            s.score = None; s.damage = None                 # the in-match TAB's first number is the ping
     st = TeamState("scoreboard", mine, enemy, source, time.time(), img.width, img.height,
                    "" if mine else "scoreboard seen but no mech codes read")
     st.result = result

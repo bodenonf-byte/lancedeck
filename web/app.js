@@ -114,7 +114,9 @@ function pad(s, i) {
   // red track behind it is what is gone; nothing read yet = an empty grey bar, not a full one
   const lvl = !s.alive ? "dead" : hpv == null ? "unk" : hpv > 66 ? "hi" : hpv > 33 ? "mid" : "lo";
   const hp = s.code || s.alive ? `<div class="thp ${lvl}"><i style="width:${hpv != null && s.alive ? hpv : 0}%"></i></div>` : "";
-  const dmg = !s.alive ? "DESTROYED" : hpv == null ? "DMG —" : `DMG ${100 - hpv}%`;
+  const dmg = !s.alive ? "DESTROYED" : hpv == null ? "HP —" : `HP ${hpv}%`;
+  // damage DEALT comes from the results table only, so it shows once the end screen is read
+  const dealt = s.damage != null ? `<span class="dealt" title="damage dealt, from the results table">DMG ${s.damage}</span>` : "";
   return `<div class="pad c-${s.cls || "Unknown"} ${s.alive ? "" : "dead"} ${me ? "me" : ""} ${s.code ? "" : "nomech"} ${cutp ? "cut" : ""} ${s.guess ? "guess" : ""} ${s.medal ? "medal" + s.medal : ""}" title="${escapeHtml(s.pilot)}${s.pros ? " · + " + escapeHtml(s.pros) + " · − " + escapeHtml(s.cons) : ""}">
     <div class="render">
       <div class="floor"></div>
@@ -130,7 +132,7 @@ function pad(s, i) {
       <span class="cls-ico">${CLASS_ICON[s.cls] || "?"}</span>
       <div class="pl-name">${s.code ? `${escapeHtml(s.name)} <b>${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""}</b>` : "MECH NOT SHOWN"}</div>
       <div class="pl-pilot">${escapeHtml(s.pilot)}</div>
-      <div class="pl-meta">${s.code ? `<span>${s.tons}t</span>` : ""}${role ? `<span class="role">${role}</span>` : ""}${s.score != null ? `<span class="score">${s.score}</span>` : ""}<span class="dmg ${lvl}" title="${hpv != null && s.alive ? hpv + "% left, as read off the lance panel or the target readout" : s.alive ? "no health read yet for this mech" : "destroyed"}">${dmg}</span></div>
+      <div class="pl-meta">${s.code ? `<span>${s.tons}t</span>` : ""}${role ? `<span class="role">${role}</span>` : ""}${s.score != null ? `<span class="score">${s.score}</span>` : ""}${dealt}<span class="dmg ${lvl}" title="${hpv != null && s.alive ? hpv + "% left, as read off the lance panel or the target readout" : s.alive ? "no health read yet for this mech" : "destroyed"}">${dmg}</span></div>
       ${hp}
       ${loadoutOf(s) ? `<div class="pl-load" title="weapons read when this mech was locked">${escapeHtml(loadoutOf(s))}</div>` : ""}
     </div>

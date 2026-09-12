@@ -254,6 +254,8 @@ class Roster:
                     tgt.lance = s.lance
                 if s.score is not None:
                     tgt.score = s.score
+                if s.damage is not None:
+                    tgt.damage = s.damage
                 if s.pilot not in ("?", "") and tgt.pilot in ("?", "spotted"):
                     tgt.pilot = s.pilot
         # the matchup is in once both sides are (nearly) complete: from here on nobody is added
@@ -270,6 +272,7 @@ class Roster:
                     t = _find(self.mine if s in st.mine else self.enemy, s)
                     if t is not None:
                         t.medal = s.medal; t.score = s.score
+                        if s.damage is not None: t.damage = s.damage
 
     # ── hud: lance panel + Q tags + sightings ────────────────────────────────
     def _hud(self, st: TeamState) -> None:
