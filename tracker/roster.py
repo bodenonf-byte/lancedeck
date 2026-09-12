@@ -163,6 +163,8 @@ def _memkey(pilot: str) -> str:
 
 
 class Roster:
+    DROP_AGAIN_AFTER = 90.0   # s after the matchup came in: a loading screen this late is the next match
+
     def __init__(self):
         self.mine: list[Slot] = []
         self.enemy: list[Slot] = []
@@ -175,6 +177,7 @@ class Roster:
         self.frozen = False            # the initial matchup is in; no pilot is added after this
         self.seen: list[Slot] = []     # enemy mechs sighted without a pilot to hang them on
         self._foreign = 0              # full table reads in a row that name a different set of pilots
+        self._foreign_names: set[str] = set()   # the strangers the last such read named
         self.match_id = ""             # names the match's record file; new matchup = new id
         self.started = 0.0
         self.memory: dict[str, dict] = {}   # pilot -> the mech he drove in a recent game (last 5 records)
@@ -191,19 +194,28 @@ class Roster:
         # the HUD after a restart is noisy: name variants, mis-paired mechs) it REPLACES the board
         first = not self.mine or (not self.frozen and full)
         new_match = bool(full and old_names and overlap < 0.4)
-        # the next match's loading screen after a finished one is a new match even when the
-        # same pilots queued again — their mechs may have changed
-        if drop and full and self.result:
-            new_match = True; self._foreign = 0
-        elif new_match and self.frozen:
-            # a frozen matchup is not thrown away by one odd read: only the next match's
-            # loading screen, or two full tables in a row that do not know these pilots
-            self._foreign += 1
+        # pilots this table names that the board does not know, however OCR spelt them
+        foreign = {_norm(s.pilot) for s in st.mine + st.enemy if s.pilot not in ("?", "", "spotted")
+                   and _find(self.mine, s) is None and _find(self.enemy, s) is None}
+        age = time.time() - (self.started or 0.0)
+        if drop and full and (self.result or (self.frozen and age > self.DROP_AGAIN_AFTER)):
+            # the next match's loading screen: after a finished one, or any time the matchup
+            # has been in for a while.  A loading screen never shows mid-match, and a relaunched
+            # lobby keeps most of the same pilots (2026-09-12: 8 of 12 re-queued, the four new
+            # ones were skipped for a whole match) — so the overlap says nothing here
+            new_match = True
+        elif self.frozen and full and (overlap < 0.4 or len(foreign) >= 3):
+            # a frozen matchup is not thrown away by one odd read: two full tables in a row
+            # naming the SAME strangers (a different set, or three or more seats swapped by a
+            # relaunched lobby) mean the board is stale.  OCR noise does not repeat its spelling.
+            again = len(foreign & self._foreign_names) >= min(2, len(foreign))
+            self._foreign = self._foreign + 1 if (again or not self._foreign_names) else 1
+            self._foreign_names = foreign
             new_match = drop or self._foreign >= 2
-        elif full and overlap >= 0.4:
-            self._foreign = 0
+        elif full:
+            self._foreign = 0; self._foreign_names = set()
         if first or new_match:
-            self._foreign = 0
+            self._foreign = 0; self._foreign_names = set()
             self.match_id = time.strftime("%Y-%m-%d_%H%M%S"); self.started = time.time()
             if st.map: self.map = st.map
             if getattr(st, "mode", ""): self.mode = st.mode

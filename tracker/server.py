@@ -161,7 +161,7 @@ class Service:
 
     # frames worth keeping for tuning: the end-of-match table, a TAB scoreboard, a Q overlay
     # with tags, a MechLab screen with a variant on it — a few of each, in samples/
-    SAMPLE_KINDS = {"end": 4, "scoreboard": 3, "qtags": 4, "mechlab": 6, "grid": 4, "oversize": 4}
+    SAMPLE_KINDS = {"end": 4, "scoreboard": 3, "drop": 3, "qtags": 4, "mechlab": 6, "grid": 4, "oversize": 4}
 
     def _sample(self, img, lines, raw):
         sdir = paths.SAMPLES; os.makedirs(sdir, exist_ok=True)
@@ -171,6 +171,8 @@ class Service:
             kind = "oversize"
         elif raw.kind == "scoreboard" and (raw.result or raw.note == "end table"):
             kind = "end"
+        elif raw.kind == "scoreboard" and raw.note == "drop preparation":
+            kind = "drop"                                        # the loading screen: what a matchup was read from
         elif raw.kind == "scoreboard":
             kind = "scoreboard"
         elif raw.kind == "hud" and (raw.enemy or len(raw.mine) > 4):
