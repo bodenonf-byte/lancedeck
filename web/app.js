@@ -88,7 +88,7 @@ function isMe(s) {
 const LANCES = [
   {key: "ALPHA", name: "ALPHA LANCE", emblem: "🐺", motto: "“HOLD THE LINE”", tone: "alpha"},
   {key: "BRAVO", name: "BRAVO LANCE", emblem: "🦅", motto: "“FIRE AND MANEUVER”", tone: "bravo"},
-  {key: "CHARLIE", name: "CHARLIE LANCE", emblem: '<svg viewBox="0 0 64 64"><path d="M21 28C9 27 2 18 4 4c4 10 9 16 19 18z"/><path d="M43 28c12-1 19-10 17-24-4 10-9 16-19 18z"/><path d="M22 20h20c6 1 10 7 9 16l-3 9c-3 9-8 15-16 15S19 54 16 45l-3-9c-1-9 3-15 9-16z"/><path class="cut" d="M18 33l12 4-2 5zM46 33l-12 4 2 5zM23 50a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0-6.4 0zM34.6 50a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0-6.4 0zM29 26l3 6 3-6z"/></svg>', motto: "“EYES EVERYWHERE”", tone: "charlie"},
+  {key: "CHARLIE", name: "CHARLIE LANCE", emblem: '<svg viewBox="0 0 64 64"><path d="M22 24C14 24 6 20 2 10c1 10 6 17 14 20 2 1 4 1 6 0z"/><path d="M42 24c8 0 16-4 20-14-1 10-6 17-14 20-2 1-4 1-6 0z"/><path d="M24 18h16c4 0 6 3 6 7l-1 9c-1 7-3 13-6 19-2 4-4 6-7 6s-5-2-7-6c-3-6-5-12-6-19l-1-9c0-4 2-7 6-7z"/><path class="cut" d="M23 32l7 2-1 4zM41 32l-7 2 1 4zM27 50a2.6 2.6 0 1 0 5.2 0 2.6 2.6 0 1 0-5.2 0zM31.8 50a2.6 2.6 0 1 0 5.2 0 2.6 2.6 0 1 0-5.2 0zM30 22l2 5 2-5z"/></svg>', motto: "“EYES EVERYWHERE”", tone: "charlie"},
 ];
 const CLASS_ICON = {Light: "▲", Medium: "◆", Heavy: "⬢", Assault: "⬟", Unknown: "?"};
 function seatLances(slots) {
