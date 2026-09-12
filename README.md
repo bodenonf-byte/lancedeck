@@ -75,6 +75,10 @@ py -3.12 -m venv .venv
 
 Build the shareable app with `powershell build\build.ps1`.
 
+## Credits
+
+Lance emblems by Lorc and Delapouite from [game-icons.net](https://game-icons.net), CC BY 3.0.
+
 ## Privacy
 
 The helper captures the game window only, keeps a few sample frames of the scoreboard and the
