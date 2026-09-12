@@ -525,3 +525,7 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .aboutbox p { font-size: 13px; line-height: 1.5; color: #cfd6df; margin: 0 0 10px; }
 .aboutbox a { color: var(--hud2); }
 .aboutrow { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+
+/* records: keep the date clear of the BOARD and delete buttons */
+.recbody { padding-right: 128px; }
+.rechead time { white-space: nowrap; }
