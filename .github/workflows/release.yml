@@ -53,21 +53,53 @@ jobs:
           timestamp-digest: SHA256
 
       - name: Zip
+        id: zip
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
           if ($tag -notlike "v*") { $tag = "dev" }
           Compress-Archive -Path dist\LanceDeck -DestinationPath "dist\LanceDeck-$tag-win64.zip" -CompressionLevel Optimal
+          "name=LanceDeck-$tag-win64.zip" >> $env:GITHUB_OUTPUT
+
+      - name: Upload unsigned build
+        id: unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: LanceDeck-unsigned
+          path: dist/${{ steps.zip.outputs.name }}
+
+      # SignPath Foundation: signs the CI-built zip when the secrets exist (docs/SIGNPATH.md)
+      - name: Sign with SignPath
+        id: signpath
+        if: ${{ env.SIGNPATH_ORG != '' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        env:
+          SIGNPATH_ORG: ${{ secrets.SIGNPATH_ORG_ID }}
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ secrets.SIGNPATH_ORG_ID }}
+          project-slug: ${{ secrets.SIGNPATH_PROJECT }}
+          signing-policy-slug: ${{ secrets.SIGNPATH_POLICY }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Pick the signed zip when there is one
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release | Out-Null
+          if (Test-Path signed) { Copy-Item signed\*.zip release\ } else { Copy-Item dist\LanceDeck-*-win64.zip release\ }
+          Get-ChildItem release
 
       - name: Draft release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: dist/LanceDeck-*-win64.zip
+          files: release/LanceDeck-*-win64.zip
           body_path: docs/ARTICLE.md
 
       - uses: actions/upload-artifact@v4
         with:
           name: LanceDeck
-          path: dist/LanceDeck-*-win64.zip
+          path: release/LanceDeck-*-win64.zip

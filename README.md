@@ -37,7 +37,7 @@ first run and are never redistributed with this app.
    their backdrop (a few minutes, once).
 4. Play. Keep the page on a second screen or open `http://<this-pc>:8765` on a phone.
 
-If Windows SmartScreen shows "Windows protected your PC", click **More info** then **Run anyway**: releases are moving to a signed build (docs/SIGNING.md); until then the warning only means Windows does not know the publisher yet.
+If Windows SmartScreen shows "Windows protected your PC", click **More info** then **Run anyway**: releases are being moved to builds signed through SignPath Foundation (docs/SIGNPATH.md); until then the warning only means Windows does not know the publisher yet.
 
 ## What it needs from you in game
 
@@ -74,6 +74,21 @@ py -3.12 -m venv .venv
 ```
 
 Build the shareable app with `powershell build\build.ps1`.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by
+[SignPath Foundation](https://signpath.org).
+
+- Committers and reviewers: [bodenonf-byte](https://github.com/bodenonf-byte)
+- Approvers: [bodenonf-byte](https://github.com/bodenonf-byte)
+- Releases are built by GitHub Actions from the public source (`.github/workflows/release.yml`)
+  and signed by SignPath from the build output; nothing built on a developer's PC is signed.
+
+Privacy policy: this program will not transfer any information to other networked systems
+unless specifically requested by the user or the person installing or operating it. It reads
+the game window on the local machine and serves a page to the local browser; it makes no other
+network connections.
 
 ## Credits
 
