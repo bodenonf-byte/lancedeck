@@ -256,6 +256,8 @@ class Service:
                 d.text((ln.x0, max(0, ln.y0 - 12)), ln.text[:40], fill=(250, 189, 61))
             r = self.cfg.get("panel_region") or [0, 0, 0.36, 0.26]
             d.rectangle([r[0] * im.width, r[1] * im.height, r[2] * im.width, r[3] * im.height], outline=(77, 216, 216), width=3)
+            t = self.cfg.get("target_region") or [0.64, 0.0, 0.94, 0.28]
+            d.rectangle([t[0] * im.width, t[1] * im.height, t[2] * im.width, t[3] * im.height], outline=(255, 140, 60), width=3)
         buf = io.BytesIO(); im.save(buf, "JPEG", quality=80)
         return buf.getvalue()
 

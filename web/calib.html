@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>MWO Tracker — calibration</title>
+<title>LanceDeck — calibration</title>
 <link rel="stylesheet" href="/static/style.css">
 <style>
   .wrap { padding: 14px 18px; }
@@ -15,7 +15,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">MWO <span>CALIBRATION</span></div><div class="status"><span id="stats"></span><a class="btn ghost" href="/">BOARD</a></div></header>
+<header><div class="brand">LANCE<span>DECK</span> · CALIBRATION</div><div class="status"><span id="stats"></span><a class="btn ghost" href="/">BOARD</a></div></header>
 <div class="wrap">
   <div class="row">
     Pilot name <input id="my_name" class="wide" placeholder="your in-game name">
@@ -26,7 +26,7 @@
     <button class="btn" id="save">SAVE</button>
     <button class="btn ghost" id="refresh">REFRESH FRAME</button>
   </div>
-  <div class="hint">The last full frame with every OCR box (amber) and the lance-panel region the fast loop reads (cyan). The panel region must contain the whole "X LANCE" block and nothing else that matters; it is read several times a second, the rest of the screen once a second.</div>
+  <div class="hint">The last full frame of the game window with every piece of text the reader found (amber). The two corners the fast loop reads a few times a second are outlined: the lance panel (cyan, top left) and the target info panel (orange, top right). The whole window is read every "full read" seconds for the TAB, the loading screen, the Q overlay and the results. Regions are fractions of the window, so they hold at any resolution.</div>
   <img class="frame" id="frame" src="/api/frame.jpg?boxes=1">
   <pre id="state"></pre>
 </div>
