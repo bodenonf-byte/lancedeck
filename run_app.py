@@ -21,6 +21,19 @@ def _port_in_use(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
+def open_page(url: str) -> None:
+    """The default browser on the page: Windows' own shell open first, Python's fallback second."""
+    try:
+        os.startfile(url)
+        return
+    except Exception:
+        pass
+    try:
+        webbrowser.open(url, new=2)
+    except Exception:
+        print("could not open a browser; open", url, "yourself")
+
+
 def _icon_image():
     """The tray icon: an amber L on a dark hex, drawn here so no file is needed."""
     from PIL import Image, ImageDraw
@@ -45,7 +58,7 @@ def main():
 
     if _port_in_use(port):                                  # already running: just show the page
         if "--no-browser" not in sys.argv:
-            webbrowser.open(url)
+            open_page(url)
         return
 
     if not console:                                          # windowed build: keep a log instead of a console
@@ -58,7 +71,7 @@ def main():
     server = uvicorn.Server(uvicorn.Config(app, host="0.0.0.0", port=port, log_level="warning"))
     threading.Thread(target=server.run, daemon=True).start()
     if "--no-browser" not in sys.argv:
-        threading.Timer(2.0, lambda: webbrowser.open(url)).start()
+        threading.Timer(1.5, lambda: open_page(url)).start()
 
     if console:
         try:
@@ -73,9 +86,9 @@ def main():
         server.should_exit = True
         icon.stop()
     menu = pystray.Menu(
-        pystray.MenuItem("Open LanceDeck", lambda icon, item: webbrowser.open(url), default=True),
-        pystray.MenuItem("Setup", lambda icon, item: webbrowser.open(url + "setup")),
-        pystray.MenuItem("Calibrate", lambda icon, item: webbrowser.open(url + "calib")),
+        pystray.MenuItem("Open LanceDeck", lambda icon, item: open_page(url), default=True),
+        pystray.MenuItem("Setup", lambda icon, item: open_page(url + "setup")),
+        pystray.MenuItem("Calibrate", lambda icon, item: open_page(url + "calib")),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Quit", quit_app),
     )
