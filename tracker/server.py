@@ -319,8 +319,10 @@ def _start():
 
 
 def _configured() -> bool:
+    """Set up = the pictures have been imported once.  The pilot name is wanted but not
+    required: the page has its own PILOT box and works without it."""
     mechs = os.path.join(ASSETS, "mechs")
-    return bool(svc and svc.cfg.get("my_name")) and os.path.isdir(mechs) and any(f.endswith(".png") for f in os.listdir(mechs))
+    return os.path.isdir(mechs) and any(f.endswith(".png") for f in os.listdir(mechs))
 
 
 @app.get("/")

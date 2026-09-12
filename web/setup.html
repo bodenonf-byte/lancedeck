@@ -35,6 +35,7 @@
   <h3>1 · YOUR PILOT NAME</h3>
   <label>exactly as it shows in game (it tells your team from the enemy's on the scoreboard)</label>
   <input id="name" placeholder="pilot name" spellcheck="false">
+  <p class="note" id="namenote" hidden><span class="bad">Without your name the tracker cannot mark your own seat or tell which block of the scoreboard is yours.</span> You can also type it later in the PILOT box on the tracker page.</p>
 
   <h3>2 · THE GAME</h3>
   <label>MechWarrior Online install folder</label>
@@ -62,6 +63,9 @@ async function status() {
   if (s.error) $("log").textContent += "\nERROR " + s.error;
   const ready = s.configured && !s.running;
   $("ready").hidden = !ready;
+  $("open").classList.toggle("ghost", !s.configured);
+  $("open").title = s.configured ? "" : "import the pictures first (button on the left)";
+  $("namenote").hidden = !!(s.my_name || $("name").value);
   if (ready && s.done && !window.__redirecting) {          // the import just finished: straight to the board
     window.__redirecting = true; $("readytxt").textContent = "All set. Opening the tracker…";
     setTimeout(() => { location.href = "/"; }, 2500);
