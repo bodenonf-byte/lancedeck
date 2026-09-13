@@ -467,6 +467,11 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .recteams .lance { margin-bottom: 8px; }
 .recboard { position: absolute; right: 36px; top: 8px; background: transparent; border: 1px solid var(--edge); color: var(--hud2); height: 22px; padding: 0 8px; cursor: pointer; font: 700 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .14em; }
 .recboard:hover { border-color: var(--hud2); }
+.statsbtns { margin-left: auto; display: flex; gap: 6px; }
+.statsbtn { background: transparent; border: 1px solid var(--edge); color: var(--hud2); height: 22px; padding: 0 8px; cursor: pointer; font: 700 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .14em; }
+.statsbtn:hover { border-color: var(--hud2); }
+.statsbtn.warn { color: var(--dim); }
+.statsbtn.warn:hover { color: var(--red); border-color: var(--red); }
 .recgrid:has(.recteams:not([hidden])) { grid-template-columns: 1fr; }
 
 /* ── the lance platform in perspective: a tilted floor slab, the mechs standing upright on it ── */

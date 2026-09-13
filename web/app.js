@@ -300,11 +300,13 @@ async function loadMyMechs() {
   try {
     const d = await fetch("/api/mymechs").then(r => r.json());
     const t = d.total || {};
+    const sinceTxt = d.since ? " · SINCE " + fmtDate(d.since).toUpperCase() : "";
     document.getElementById("myTotal").textContent = t.games
-      ? `${escapeHtml(d.pilot).toUpperCase()} · ${t.games} GAME${t.games > 1 ? "S" : ""} · ${t.wins} W / ${t.losses} L${t.avg != null ? " · AVG SCORE " + t.avg : ""}${t.best ? " · BEST " + t.best : ""} · ${MEDAL[1]} ${t.medals[0]} ${MEDAL[2]} ${t.medals[1]} ${MEDAL[3]} ${t.medals[2]}`
-      : (d.pilot ? "NO MATCH RECORDED YET FOR " + escapeHtml(d.pilot).toUpperCase() : "SET YOUR PILOT NAME FIRST");
+      ? `${escapeHtml(d.pilot).toUpperCase()} · ${t.games} GAME${t.games > 1 ? "S" : ""} · ${t.wins} W / ${t.losses} L${t.avg != null ? " · AVG SCORE " + t.avg : ""}${t.best ? " · BEST " + t.best : ""} · ${MEDAL[1]} ${t.medals[0]} ${MEDAL[2]} ${t.medals[1]} ${MEDAL[3]} ${t.medals[2]}${sinceTxt}`
+      : (d.pilot ? (d.since ? "CLEAN START" + sinceTxt + " · NO MATCH RECORDED SINCE" : "NO MATCH RECORDED YET FOR " + escapeHtml(d.pilot).toUpperCase()) : "SET YOUR PILOT NAME FIRST");
+    document.getElementById("statsRestore").hidden = !d.since;
     const host = document.getElementById("myMechs");
-    if (!d.mechs || !d.mechs.length) { host.innerHTML = '<div class="empty">Your mechs appear here after the first match whose results screen was read. Stay on the results a couple of seconds at the end of a match.</div>'; return; }
+    if (!d.mechs || !d.mechs.length) { host.innerHTML = `<div class="empty">${d.since ? "Stats were reset. Your mechs appear here again after the next match whose results screen was read." : "Your mechs appear here after the first match whose results screen was read. Stay on the results a couple of seconds at the end of a match."}</div>`; return; }
     host.innerHTML = d.mechs.map(m => {
       const s = {code: m.code, variant: m.variant, cls: m.cls};
       const pic = cutOf(s) || picOf(s);
@@ -328,8 +330,17 @@ async function loadMyMechs() {
       </article>`;
     }).join("");
   } catch (e) { /* the helper may be restarting */ }
-  myMechsBusy = false;
+  finally { myMechsBusy = false; }
 }
+document.getElementById("statsReset").addEventListener("click", async () => {
+  if (!confirm("Reset your mech stats?\n\nThe MY MECHS board starts counting from now. Your match records are kept, and SHOW ALL HISTORY brings the old stats back.")) return;
+  await fetch("/api/mymechs/reset", {method: "POST"});
+  loadMyMechs();
+});
+document.getElementById("statsRestore").addEventListener("click", async () => {
+  await fetch("/api/mymechs/restore", {method: "POST"});
+  loadMyMechs();
+});
 
 // ── the bottom strip: spotted mechs, the map card, the match state ───────────────────
 function renderFooter(d) {

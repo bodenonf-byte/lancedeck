@@ -471,10 +471,12 @@ def my_mechs():
     survival — the MECH BOARD."""
     me = (svc.cfg.get("my_name") if svc else "") or ""
     key = re.sub(r"[^a-z0-9]", "", me.lower())
+    # A stats reset does not touch the records: it only moves the point the board counts from.
+    since = float((svc.cfg.get("stats_since") if svc else 0) or 0)
     mechs: dict[str, dict] = {}
     total = {"games": 0, "wins": 0, "losses": 0, "score": 0, "best": 0, "medals": [0, 0, 0], "survived": 0}
     if not key or not os.path.isdir(RECORDS):
-        return {"pilot": me, "total": total, "mechs": []}
+        return {"pilot": me, "since": since or None, "total": total, "mechs": []}
     for f in sorted(os.listdir(RECORDS)):
         if not f.endswith(".json"):
             continue
@@ -482,6 +484,8 @@ def my_mechs():
             with open(os.path.join(RECORDS, f), encoding="utf-8") as fh:
                 d = json.load(fh)
         except Exception:
+            continue
+        if since and (d.get("started") or d.get("saved") or 0) < since:
             continue
         mine = d.get("mine", [])
         s = next((x for x in mine if key and (key in re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) or re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) in key) and len(re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower())) >= 3), None)
@@ -513,7 +517,30 @@ def my_mechs():
     out.sort(key=lambda m: (-m["games"], -m["last"]))
     scored_games = sum(m["scored"] for m in out)
     total["avg"] = round(total["score"] / scored_games) if scored_games else None
-    return {"pilot": me, "total": total, "mechs": out}
+    return {"pilot": me, "since": since or None, "total": total, "mechs": out}
+
+
+def _save_cfg():
+    with open(CFG_PATH, "w", encoding="utf-8") as f:
+        json.dump(svc.cfg, f, indent=2)
+
+
+@app.post("/api/mymechs/reset")
+async def reset_my_mechs():
+    """A clean start for the MECH BOARD: stats count from now on. The match records stay."""
+    svc.cfg["stats_since"] = time.time()
+    _save_cfg()
+    svc.records_v = getattr(svc, "records_v", 0) + 1
+    return {"since": svc.cfg["stats_since"]}
+
+
+@app.post("/api/mymechs/restore")
+async def restore_my_mechs():
+    """Undo the reset: the board counts every record again."""
+    svc.cfg.pop("stats_since", None)
+    _save_cfg()
+    svc.records_v = getattr(svc, "records_v", 0) + 1
+    return {"since": None}
 
 
 @app.get("/api/records/{match_id}")
@@ -557,8 +584,7 @@ async def set_config(body: dict):
     svc.cfg.update({k: v for k, v in body.items() if not k.startswith("_")})
     from .match import set_panel_region
     set_panel_region(svc.cfg.get("panel_region"))
-    with open(CFG_PATH, "w", encoding="utf-8") as f:
-        json.dump(svc.cfg, f, indent=2)
+    _save_cfg()
     return svc.cfg
 
 
