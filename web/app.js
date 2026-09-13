@@ -390,7 +390,9 @@ function renderFooter(d) {
                                                : `<div class="mappic"></div><div class="maptxt"><b>NO MAP YET</b><span>read from the loading screen</span></div>`;
   const st = document.getElementById("dropState");
   let text = "WAITING FOR DROP", cls = "";
-  if (d.result) { text = d.result; cls = d.result.toLowerCase(); }
+  if (d.starting) { text = "STARTING UP"; cls = ""; }
+  else if (d.boot_error) { text = "COULD NOT START"; cls = "defeat"; }
+  else if (d.result) { text = d.result; cls = d.result.toLowerCase(); }
   else if (d.spectating) { text = "SPECTATING " + escapeHtml(d.spectating).toUpperCase(); cls = "spec"; }
   else if (d.frozen) { text = "IN MATCH · LOCKED"; cls = "live"; }
   else if ((d.mine || []).length) { text = "READING THE DROP"; cls = "live"; }

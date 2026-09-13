@@ -71,7 +71,15 @@ def main():
     server = uvicorn.Server(uvicorn.Config(app, host="0.0.0.0", port=port, log_level="warning"))
     threading.Thread(target=server.run, daemon=True).start()
     if "--no-browser" not in sys.argv:
-        threading.Timer(1.5, lambda: open_page(url)).start()
+        def when_up():
+            # the browser opens once the server answers — a fixed delay opened it on a
+            # "cannot connect" page while the reader was still loading on slower PCs
+            for _ in range(600):
+                if _port_in_use(port):
+                    break
+                time.sleep(0.25)
+            open_page(url)
+        threading.Thread(target=when_up, daemon=True).start()
 
     import tracker.server as srv
     if console:

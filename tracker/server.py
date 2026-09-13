@@ -314,10 +314,34 @@ svc: Service | None = None
 app = FastAPI(title="MechWarrior Online Team Tracker")
 
 
+_boot = {"error": "", "since": 0.0}
+
+
+def _build_service():
+    """The text reader and the screen grabber take seconds to come up (longer on a slow PC):
+    they are built here, on their own thread, so the page answers at once with a 'starting'
+    state instead of refusing the connection the launcher's browser makes."""
+    global svc
+    print(f"{APP}: loading the text reader and the screen grabber...", flush=True)
+    try:
+        svc = Service()
+        print(f"{APP}: ready in {time.time() - _boot['since']:.1f} s", flush=True)
+    except Exception as e:
+        _boot["error"] = repr(e)[:200]
+        print(f"{APP}: could not start: {_boot['error']}", flush=True)
+
+
 @app.on_event("startup")
 def _start():
-    global svc
-    svc = Service()
+    _boot["since"] = time.time()
+    threading.Thread(target=_build_service, daemon=True).start()
+
+
+def _starting_state() -> dict:
+    note = ("could not start: " + _boot["error"]) if _boot["error"] else "starting up: loading the text reader and the screen grabber"
+    return {"kind": "none", "mine": [], "enemy": [], "seen": [], "source": "none", "ts": 0, "note": note, "map": "",
+            "version": -1, "starting": not _boot["error"], "boot_error": _boot["error"], "stats": {}, "live": False,
+            "my_name": "", "app": APP, "app_version": VERSION}
 
 
 def _configured() -> bool:
@@ -407,7 +431,7 @@ def calib():
 
 @app.get("/api/state")
 def state():
-    return JSONResponse(svc.payload() if svc else {"kind": "none", "mine": [], "enemy": [], "version": 0, "note": "starting"})
+    return JSONResponse(svc.payload() if svc else _starting_state())
 
 
 @app.get("/api/frame.jpg")
@@ -626,11 +650,15 @@ async def set_config(body: dict):
 async def ws(sock: WebSocket):
     await sock.accept()
     seen = -1
+    last_boot = 0.0
     try:
         while True:
             if svc and svc.version != seen:
                 seen = svc.version
                 await sock.send_text(json.dumps(svc.payload()))
+            elif svc is None and time.time() - last_boot > 1.0:        # still loading: say so every second
+                last_boot = time.time()
+                await sock.send_text(json.dumps(_starting_state()))
             await asyncio.sleep(0.15)
     except WebSocketDisconnect:
         pass
@@ -638,7 +666,11 @@ async def ws(sock: WebSocket):
 
 @app.middleware("http")
 async def _no_stale_static(request, call_next):
-    """Browsers must revalidate the page's files on every load, so a fix shows up at once."""
+    """Browsers must revalidate the page's files on every load, so a fix shows up at once.
+    While the service is still loading, the API answers 503 instead of crashing on it."""
+    p = request.url.path
+    if svc is None and p.startswith("/api/") and not p.startswith(("/api/state", "/api/setup/")):
+        return JSONResponse({"error": "starting", "note": _starting_state()["note"]}, status_code=503)
     resp = await call_next(request)
     if request.url.path.startswith(("/static/", "/records/")) or request.url.path in ("/", "/setup", "/calib"):
         resp.headers["Cache-Control"] = "no-cache"
