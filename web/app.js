@@ -271,12 +271,31 @@ async function loadRecords() {
             <div class="rechead"><b>${escapeHtml(r.map || "unknown map")}</b><span>${escapeHtml(r.mode || "")}</span><span class="recright"><time>${fmtDate(r.started || r.saved)}</time><button class="recboard" data-id="${r.match_id}">BOARD ▾</button><button class="recdel" data-id="${r.match_id}" title="delete this record">✕</button></span></div>
             <div class="recscore"><span class="mine">${r.mine_alive}/${r.mine}</span> alive <em>vs</em> <span class="foe">${r.enemy_alive}/${r.enemy}</span></div>
             ${r.me ? `<div class="recme">${r.me.code ? escapeHtml(r.me.name) + " " + r.me.code + (r.me.variant ? "-" + escapeHtml(r.me.variant) : "") : "mech not shown"}${r.me.score != null ? ` · score ${r.me.score}` : ""}${r.me.medal ? " " + MEDAL[r.me.medal] : ""}${r.me.alive ? "" : " · destroyed"}</div>` : ""}
-            <ul class="recmedals">${(r.medals || []).map(m => `<li><i>${MEDAL[m.medal]}</i><b class="${m.side}">${escapeHtml(m.pilot)}</b><span>${m.code ? escapeHtml(m.name || "") + " " + m.code + (m.variant ? "-" + escapeHtml(m.variant) : "") : ""}</span><em>${m.score != null ? m.score : ""}</em></li>`).join("") || '<li class="none">no scores read</li>'}</ul>
+            <div class="recrow">
+              <ul class="recmedals">${(r.medals || []).map(m => `<li><i>${MEDAL[m.medal]}</i><b class="${m.side}">${escapeHtml(m.pilot)}</b><span>${m.code ? escapeHtml(m.name || "") + " " + m.code + (m.variant ? "-" + escapeHtml(m.variant) : "") : ""}</span><em>${m.score != null ? m.score : ""}</em></li>`).join("") || '<li class="none">no scores read</li>'}</ul>
+              ${podiumOf(r)}
+            </div>
           </div>
           <div class="recteams" id="rb-${r.match_id}" hidden></div>
         </article>`).join("")}</div>`).join("") : '<div class="empty">The final screen of each match is kept here once the results table has been read. Stay on the results screen a couple of seconds at the end of a match.</div>';
   } catch (e) { /* the helper may be restarting */ }
   finally { recordsBusy = false; if (recordsAgain) { recordsAgain = false; loadRecords(); } }
+}
+// the podium: the winning side's gold, silver and bronze as portraits (your side on a tie)
+function podiumOf(r) {
+  const side = r.result === "DEFEAT" ? "enemy" : "mine";
+  const top = (r.medals || []).filter(m => m.side === side && m.medal).sort((a, b) => a.medal - b.medal).slice(0, 3);
+  if (!top.length) return "";
+  return `<div class="recpodium ${side}">${top.map(m => {
+    const s = {code: m.code, variant: m.variant};
+    const pic = m.code ? (cutOf(s) || picOf(s)) : null;
+    return `<div class="pseat m${m.medal}" title="${escapeHtml(m.pilot)}${m.score != null ? " · score " + m.score : ""}">
+      <div class="ppic">${pic ? `<img src="${pic}" alt="">` : `<span>${m.code || "?"}</span>`}<i>${MEDAL[m.medal]}</i></div>
+      <b>${escapeHtml(m.pilot)}</b>
+      <span>${m.code ? escapeHtml(m.name || m.code) : "mech not shown"}</span>
+      <em>${m.score != null ? m.score : ""}</em>
+    </div>`;
+  }).join("")}</div>`;
 }
 document.getElementById("records").addEventListener("click", async e => {
   const bb = e.target.closest(".recboard");
