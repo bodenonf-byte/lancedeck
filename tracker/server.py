@@ -494,7 +494,7 @@ def my_mechs():
         m = mechs.setdefault(mid, {"key": mid, "code": s["code"], "variant": s.get("variant") or "", "name": s.get("name"), "tons": s.get("tons"), "cls": s.get("cls"),
                                    "faction": s.get("faction"), "pros": s.get("pros"), "cons": s.get("cons"),
                                    "games": 0, "wins": 0, "losses": 0, "scores": [], "best": 0, "medals": [0, 0, 0], "survived": 0, "last": 0, "matches": [],
-                                   "since": since_map.get(mid)})
+                                   "since": since_map.get(mid) or since_map.get("*")})
         if m["since"] and (d.get("started") or d.get("saved") or 0) < m["since"]:
             continue                      # before this mech's clean start: listed, not counted
         res = d.get("result", "")
@@ -524,6 +524,8 @@ def my_mechs():
 
 def _since_map() -> dict:
     m = svc.cfg.get("stats_since") if svc else None
+    if isinstance(m, (int, float)) and m:            # the first shape: one moment for the whole board
+        return {"*": float(m)}
     return m if isinstance(m, dict) else {}
 
 

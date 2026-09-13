@@ -24,7 +24,7 @@ function applyPrefs() {
   if (view === "records") loadRecords();
   if (view === "board") loadMyMechs();
 }
-document.querySelectorAll(".navbtn[data-view]").forEach(b => b.onclick = () => { prefs.view = b.dataset.view; savePrefs(); applyPrefs(); });
+document.querySelectorAll(".navbtn[data-view]").forEach(b => b.onclick = () => { if (b.dataset.view !== prefs.view) undoable.clear(); prefs.view = b.dataset.view; savePrefs(); applyPrefs(); });
 document.getElementById("themeBtn").onclick = () => { prefs.theme = (prefs.theme || "dark") === "dark" ? "normal" : "dark"; savePrefs(); applyPrefs(); };
 document.getElementById("optMap").onchange = e => { prefs.mapbg = e.target.checked; savePrefs(); applyPrefs(); };
 
@@ -305,6 +305,7 @@ function armed(btn, label) {
 
 // ── MY MECHS: what the pilot has played, mech by mech, out of the records ──────────────
 let myMechsBusy = false, myMechsAgain = false;   // a call during a load runs once more after it
+const undoable = new Set();                       // mechs reset on this visit of the board: UNDO stays until the menu changes
 async function loadMyMechs() {
   if (myMechsBusy) { myMechsAgain = true; return; } myMechsBusy = true;
   try {
@@ -320,9 +321,10 @@ async function loadMyMechs() {
       const pic = cutOf(s) || picOf(s);
       const wr = m.wins + m.losses ? Math.round(100 * m.wins / (m.wins + m.losses)) : null;
       const surv = m.games ? Math.round(100 * m.survived / m.games) : 0;
-      const tools = m.since
-        ? `<span class="mm-tools"><em class="mm-since" title="stats count from this moment; earlier records are kept but not counted">SINCE ${fmtDate(m.since).toUpperCase()}</em><button class="mmundo" data-key="${escapeHtml(m.key)}" title="count every record for this mech again">UNDO</button></span>`
-        : `<span class="mm-tools"><button class="mmreset" data-key="${escapeHtml(m.key)}" title="clean start for this mech: stats count from now on, match records are kept">RESET</button></span>`;
+      const since = m.since ? `<em class="mm-since" title="stats count from this moment; earlier records are kept but not counted">SINCE ${fmtDate(m.since).toUpperCase()}</em>` : "";
+      const tools = m.since && undoable.has(m.key)
+        ? `<span class="mm-tools">${since}<button class="mmundo" data-key="${escapeHtml(m.key)}" title="count every record for this mech again">UNDO</button></span>`
+        : `<span class="mm-tools">${since}<button class="mmreset" data-key="${escapeHtml(m.key)}" title="clean start for this mech: stats count from now on, match records are kept">RESET</button></span>`;
       return `<article class="mymech c-${m.cls}${m.games ? "" : " fresh"}">
         <div class="mm-pic">${pic ? `<img src="${pic}" alt="">` : `<span>${m.code}</span>`}<b class="tons">${m.tons}t</b></div>
         <div class="mm-body">
@@ -347,7 +349,9 @@ document.getElementById("myMechs").addEventListener("click", async e => {
   const r = e.target.closest(".mmreset"), u = e.target.closest(".mmundo");
   if (!r && !u) return;
   if (r && !armed(r, "SURE? RECORDS ARE KEPT")) return;
-  await fetch(r ? "/api/mymechs/reset" : "/api/mymechs/restore", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({mech: (r || u).dataset.key})});
+  const key = (r || u).dataset.key;
+  await fetch(r ? "/api/mymechs/reset" : "/api/mymechs/restore", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({mech: key})});
+  if (r) undoable.add(key); else undoable.delete(key);
   loadMyMechs();
 });
 
