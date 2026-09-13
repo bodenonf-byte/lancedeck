@@ -121,7 +121,6 @@ function pad(s, i) {
   return `<div class="pad c-${s.cls || "Unknown"} ${s.alive ? "" : "dead"} ${me ? "me" : ""} ${spec ? "spec" : ""} ${s.code ? "" : "nomech"} ${cutp ? "cut" : ""} ${s.guess ? "guess" : ""} ${s.medal ? "medal" + s.medal : ""}" title="${escapeHtml(s.pilot)}${s.pros ? " · + " + escapeHtml(s.pros) + " · − " + escapeHtml(s.cons) : ""}">
     <div class="render">
       <div class="floor"></div>
-      ${spec ? '<span class="spotted spec" title="the mech you are watching from the spectator view">👁 SPECTATING</span>' : ""}
       ${s.code ? `<a class="build" href="${buildUrl(s)}" target="_blank" rel="noopener" title="builds for the ${escapeHtml(s.name)} ${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""} on GrimMechs">` : ""}${pic ? `<img src="${pic}" alt="">` : `<span class="code">${s.code || "?"}</span>`}${s.code ? "</a>" : ""}
       ${s.code ? `<b class="tons">${s.tons}t</b>` : ""}
       ${me ? '<span class="you">YOU</span>' : ""}
@@ -131,6 +130,7 @@ function pad(s, i) {
     </div>
     <div class="plate">
       ${medalOf(s) || `<span class="cls-ico">${CLASS_ICON[s.cls] || "?"}</span>`}
+      ${spec && !s.medal ? '<span class="spectag" title="the mech you are watching from the spectator view">SPECTATING</span>' : ""}
       <div class="pl-name">${s.code ? `${escapeHtml(s.name)} <b>${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""}</b>` : "MECH NOT SHOWN"}</div>
       <div class="pl-pilot">${escapeHtml(s.pilot)}</div>
       <div class="pl-meta">${s.code ? `<span>${s.tons}t</span>` : ""}${role ? `<span class="role">${role}</span>` : ""}${s.score != null ? `<span class="score">${s.score}</span>` : ""}${dealt}<span class="dmg ${lvl}" title="${hpv != null && s.alive ? hpv + "% left, as read off the lance panel or the target readout" : s.alive ? "no health read yet for this mech" : "destroyed"}">${dmg}</span></div>
