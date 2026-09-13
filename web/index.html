@@ -34,6 +34,7 @@
         <button id="themeBtn" class="btn ghost" title="dark / normal">DARK</button>
         <button id="liveBtn" class="btn">LIVE: ON</button>
         <button id="resetBtn" class="btn ghost" title="forget the current match">RESET</button>
+        <button id="quitBtn" class="btn ghost quit" title="stop LanceDeck: the tray icon and the helper reading your screen go away">QUIT</button>
         <a id="donateBtn" class="btn support" href="#" target="_blank" rel="noopener" title="the app is free; a donation keeps it going">SUPPORT ♥</a>
         <button id="aboutBtn" class="navbtn link" style="padding:6px 0 0">ABOUT</button>
       </div>
@@ -68,6 +69,13 @@
 
 <div id="drop" class="drop"><div>Drop a game screenshot, a TAB screenshot or a Q-overlay screenshot here</div></div>
 <div id="note" class="note" hidden></div>
+<div id="stoppedBox" class="about stopped" hidden>
+  <div class="aboutbox">
+    <h2>LANCE<i>DECK</i> <small>STOPPED</small></h2>
+    <p>The helper reading your screen has been stopped and the tray icon is gone. Nothing runs in the background any more.</p>
+    <p>You can close this tab. To play with LanceDeck again, start <b>LanceDeck.exe</b>.</p>
+  </div>
+</div>
 <div id="about" class="about" hidden>
   <div class="aboutbox">
     <h2>LANCE<i>DECK</i> <small id="aboutVer"></small></h2>

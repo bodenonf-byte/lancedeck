@@ -476,7 +476,7 @@ function connect() {
   if (DEMO) return;                                        // the canned match is applied once the pictures are listed
   const ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
   ws.onmessage = e => apply(JSON.parse(e.data));
-  ws.onclose = () => setTimeout(connect, 1500);
+  ws.onclose = () => { if (!stopped) setTimeout(connect, 1500); };
 }
 applyPrefs();
 connect();
@@ -513,6 +513,14 @@ document.getElementById("liveBtn").onclick = async () => {
 document.getElementById("aboutBtn").onclick = () => { document.getElementById("about").hidden = false; };
 document.getElementById("aboutClose").onclick = () => { document.getElementById("about").hidden = true; };
 document.getElementById("about").addEventListener("click", e => { if (e.target.id === "about") e.target.hidden = true; });
+// QUIT: stops the helper itself (tray icon included), for players done for the night
+let stopped = false;
+document.getElementById("quitBtn").onclick = async e => {
+  if (!armed(e.currentTarget, "SURE? STOPS LANCEDECK")) return;
+  stopped = true;
+  try { await fetch("/api/quit", {method: "POST"}); } catch (err) { /* it may be gone already */ }
+  document.getElementById("stoppedBox").hidden = false;
+};
 document.getElementById("resetBtn").onclick = async () => {
   await fetch("/api/reset", {method: "POST"});
   lastVersion = -1; fetch("/api/state").then(r => r.json()).then(apply);

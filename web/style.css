@@ -568,6 +568,8 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 /* ── branding, support, about ── */
 .logo b i { font-style: normal; color: var(--hud2); }
 .btn.support { border-color: #ff5e8a; color: #ff5e8a; text-align: center; font-size: 12px; }
+.btn.quit:hover, .btn.quit.armed { border-color: var(--red); color: #fff; background: var(--red); }
+.about.stopped .aboutbox { border-color: var(--red); } .about.stopped .aboutbox small { color: var(--red); }
 .btn.support:hover { background: rgba(255,94,138,.12); }
 .about { position: fixed; inset: 0; z-index: 20; background: rgba(4,6,10,.8); display: flex; align-items: center; justify-content: center; padding: 20px; }
 .aboutbox { width: min(560px, 100%); background: rgba(12,16,22,.98); border: 1px solid var(--edge); padding: 22px 26px; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px)); }

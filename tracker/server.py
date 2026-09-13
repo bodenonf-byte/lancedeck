@@ -440,6 +440,27 @@ async def reset():
     return {"ok": True}
 
 
+quit_hook = None      # set by the tray launcher: stops the tray icon and the server politely
+
+
+@app.post("/api/quit")
+async def quit_app():
+    """Stop LanceDeck from the page: the tray icon and the server go through the launcher's
+    hook when there is one; a second later the process ends whatever happened, so a helper
+    started from a console (python -m tracker) stops too."""
+    def _bye():
+        time.sleep(0.4)
+        try:
+            if quit_hook:
+                quit_hook()
+        except Exception:
+            pass
+        time.sleep(1.2)
+        os._exit(0)
+    threading.Thread(target=_bye, daemon=True).start()
+    return {"ok": True, "bye": True}
+
+
 @app.get("/api/records")
 def records():
     """Every match's final screen, newest first: the roster as read plus the screenshot's name."""

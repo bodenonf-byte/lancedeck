@@ -73,7 +73,9 @@ def main():
     if "--no-browser" not in sys.argv:
         threading.Timer(1.5, lambda: open_page(url)).start()
 
+    import tracker.server as srv
     if console:
+        srv.quit_hook = lambda: setattr(server, "should_exit", True)      # the page's QUIT button
         try:
             while not server.should_exit:
                 time.sleep(0.5)
@@ -92,7 +94,9 @@ def main():
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Quit", quit_app),
     )
-    pystray.Icon(APP, _icon_image(), f"{APP} {VERSION} — {url}", menu).run()
+    icon = pystray.Icon(APP, _icon_image(), f"{APP} {VERSION} — {url}", menu)
+    srv.quit_hook = lambda: quit_app(icon, None)                          # the page's QUIT button
+    icon.run()
 
 
 if __name__ == "__main__":
