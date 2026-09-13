@@ -311,22 +311,23 @@ async function loadMyMechs() {
   try {
     const d = await fetch("/api/mymechs").then(r => r.json());
     const t = d.total || {};
-    const sinceTxt = d.since ? " · SINCE " + fmtDate(d.since).toUpperCase() : "";
     document.getElementById("myTotal").textContent = t.games
-      ? `${escapeHtml(d.pilot).toUpperCase()} · ${t.games} GAME${t.games > 1 ? "S" : ""} · ${t.wins} W / ${t.losses} L${t.avg != null ? " · AVG SCORE " + t.avg : ""}${t.best ? " · BEST " + t.best : ""} · ${MEDAL[1]} ${t.medals[0]} ${MEDAL[2]} ${t.medals[1]} ${MEDAL[3]} ${t.medals[2]}${sinceTxt}`
-      : (d.pilot ? (d.since ? "CLEAN START" + sinceTxt + " · NO MATCH RECORDED SINCE" : "NO MATCH RECORDED YET FOR " + escapeHtml(d.pilot).toUpperCase()) : "SET YOUR PILOT NAME FIRST");
-    document.getElementById("statsRestore").hidden = !d.since;
+      ? `${escapeHtml(d.pilot).toUpperCase()} · ${t.games} GAME${t.games > 1 ? "S" : ""} · ${t.wins} W / ${t.losses} L${t.avg != null ? " · AVG SCORE " + t.avg : ""}${t.best ? " · BEST " + t.best : ""} · ${MEDAL[1]} ${t.medals[0]} ${MEDAL[2]} ${t.medals[1]} ${MEDAL[3]} ${t.medals[2]}`
+      : (d.pilot ? "NO MATCH RECORDED YET FOR " + escapeHtml(d.pilot).toUpperCase() : "SET YOUR PILOT NAME FIRST");
     const host = document.getElementById("myMechs");
-    if (!d.mechs || !d.mechs.length) { host.innerHTML = `<div class="empty">${d.since ? "Stats were reset. Your mechs appear here again after the next match whose results screen was read." : "Your mechs appear here after the first match whose results screen was read. Stay on the results a couple of seconds at the end of a match."}</div>`; return; }
+    if (!d.mechs || !d.mechs.length) { host.innerHTML = '<div class="empty">Your mechs appear here after the first match whose results screen was read. Stay on the results a couple of seconds at the end of a match.</div>'; return; }
     host.innerHTML = d.mechs.map(m => {
       const s = {code: m.code, variant: m.variant, cls: m.cls};
       const pic = cutOf(s) || picOf(s);
       const wr = m.wins + m.losses ? Math.round(100 * m.wins / (m.wins + m.losses)) : null;
       const surv = m.games ? Math.round(100 * m.survived / m.games) : 0;
-      return `<article class="mymech c-${m.cls}">
+      const tools = m.since
+        ? `<span class="mm-tools"><em class="mm-since" title="stats count from this moment; earlier records are kept but not counted">SINCE ${fmtDate(m.since).toUpperCase()}</em><button class="mmundo" data-key="${escapeHtml(m.key)}" title="count every record for this mech again">UNDO</button></span>`
+        : `<span class="mm-tools"><button class="mmreset" data-key="${escapeHtml(m.key)}" title="clean start for this mech: stats count from now on, match records are kept">RESET</button></span>`;
+      return `<article class="mymech c-${m.cls}${m.games ? "" : " fresh"}">
         <div class="mm-pic">${pic ? `<img src="${pic}" alt="">` : `<span>${m.code}</span>`}<b class="tons">${m.tons}t</b></div>
         <div class="mm-body">
-          <div class="mm-head"><b>${escapeHtml(m.name || m.code)}</b><i>${m.code}${m.variant ? "-" + escapeHtml(m.variant) : ""}</i><span class="role">${roleOf(s)}</span></div>
+          <div class="mm-head"><b>${escapeHtml(m.name || m.code)}</b><i>${m.code}${m.variant ? "-" + escapeHtml(m.variant) : ""}</i><span class="role">${roleOf(s)}</span>${tools}</div>
           <div class="mm-stats">
             <div><b>${m.games}</b><span>GAMES</span></div>
             <div><b class="${wr == null ? "" : wr >= 50 ? "good" : "bad"}">${m.wins}<small>W</small> ${m.losses}<small>L</small></b><span>${wr != null ? wr + "% WIN" : "RESULT"}</span></div>
@@ -335,7 +336,7 @@ async function loadMyMechs() {
             <div><b>${surv}%</b><span>SURVIVED</span></div>
             <div><b class="medals">${m.medals[0] ? MEDAL[1] + m.medals[0] : ""}${m.medals[1] ? " " + MEDAL[2] + m.medals[1] : ""}${m.medals[2] ? " " + MEDAL[3] + m.medals[2] : ""}${!m.medals.some(x => x) ? "–" : ""}</b><span>MEDALS</span></div>
           </div>
-          <div class="mm-matches">${m.matches.slice(0, 8).map(x => `<span class="${(x.result || "").toLowerCase()}" title="${escapeHtml(x.map || "")} · ${escapeHtml(x.mode || "")}${x.score != null ? " · score " + x.score : ""}${x.alive ? "" : " · destroyed"}">${x.result === "VICTORY" ? "W" : x.result === "DEFEAT" ? "L" : "·"}${x.medal ? MEDAL[x.medal] : ""}${x.score != null ? " " + x.score : ""}</span>`).join("")}</div>
+          <div class="mm-matches">${!m.games && m.since ? '<span class="none">clean start · no match recorded since</span>' : ""}${m.matches.slice(0, 8).map(x => `<span class="${(x.result || "").toLowerCase()}" title="${escapeHtml(x.map || "")} · ${escapeHtml(x.mode || "")}${x.score != null ? " · score " + x.score : ""}${x.alive ? "" : " · destroyed"}">${x.result === "VICTORY" ? "W" : x.result === "DEFEAT" ? "L" : "·"}${x.medal ? MEDAL[x.medal] : ""}${x.score != null ? " " + x.score : ""}</span>`).join("")}</div>
           ${m.pros ? `<div class="pros">+ ${escapeHtml(m.pros)}</div><div class="cons">&minus; ${escapeHtml(m.cons || "")}</div>` : ""}
         </div>
       </article>`;
@@ -343,13 +344,11 @@ async function loadMyMechs() {
   } catch (e) { /* the helper may be restarting */ }
   finally { myMechsBusy = false; }
 }
-document.getElementById("statsReset").addEventListener("click", async e => {
-  if (!armed(e.currentTarget, "SURE? RECORDS ARE KEPT")) return;
-  await fetch("/api/mymechs/reset", {method: "POST"});
-  loadMyMechs();
-});
-document.getElementById("statsRestore").addEventListener("click", async () => {
-  await fetch("/api/mymechs/restore", {method: "POST"});
+document.getElementById("myMechs").addEventListener("click", async e => {
+  const r = e.target.closest(".mmreset"), u = e.target.closest(".mmundo");
+  if (!r && !u) return;
+  if (r && !armed(r, "SURE? RECORDS ARE KEPT")) return;
+  await fetch(r ? "/api/mymechs/reset" : "/api/mymechs/restore", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({mech: (r || u).dataset.key})});
   loadMyMechs();
 });
 

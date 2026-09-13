@@ -471,12 +471,13 @@ def my_mechs():
     survival — the MECH BOARD."""
     me = (svc.cfg.get("my_name") if svc else "") or ""
     key = re.sub(r"[^a-z0-9]", "", me.lower())
-    # A stats reset does not touch the records: it only moves the point the board counts from.
-    since = float((svc.cfg.get("stats_since") if svc else 0) or 0)
+    # A per-mech stats reset does not touch the records: it only moves the point that mech's
+    # column counts from.  stats_since = {"RVN-4X": epoch, ...}
+    since_map = _since_map()
     mechs: dict[str, dict] = {}
     total = {"games": 0, "wins": 0, "losses": 0, "score": 0, "best": 0, "medals": [0, 0, 0], "survived": 0}
     if not key or not os.path.isdir(RECORDS):
-        return {"pilot": me, "since": since or None, "total": total, "mechs": []}
+        return {"pilot": me, "total": total, "mechs": []}
     for f in sorted(os.listdir(RECORDS)):
         if not f.endswith(".json"):
             continue
@@ -485,8 +486,6 @@ def my_mechs():
                 d = json.load(fh)
         except Exception:
             continue
-        if since and (d.get("started") or d.get("saved") or 0) < since:
-            continue
         mine = d.get("mine", [])
         s = next((x for x in mine if key and (key in re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) or re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) in key) and len(re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower())) >= 3), None)
         if not s or not s.get("code"):
@@ -494,7 +493,10 @@ def my_mechs():
         mid = f"{s['code']}-{s.get('variant') or ''}".rstrip("-")
         m = mechs.setdefault(mid, {"key": mid, "code": s["code"], "variant": s.get("variant") or "", "name": s.get("name"), "tons": s.get("tons"), "cls": s.get("cls"),
                                    "faction": s.get("faction"), "pros": s.get("pros"), "cons": s.get("cons"),
-                                   "games": 0, "wins": 0, "losses": 0, "scores": [], "best": 0, "medals": [0, 0, 0], "survived": 0, "last": 0, "matches": []})
+                                   "games": 0, "wins": 0, "losses": 0, "scores": [], "best": 0, "medals": [0, 0, 0], "survived": 0, "last": 0, "matches": [],
+                                   "since": since_map.get(mid)})
+        if m["since"] and (d.get("started") or d.get("saved") or 0) < m["since"]:
+            continue                      # before this mech's clean start: listed, not counted
         res = d.get("result", "")
         m["games"] += 1; total["games"] += 1
         if res == "VICTORY": m["wins"] += 1; total["wins"] += 1
@@ -517,7 +519,12 @@ def my_mechs():
     out.sort(key=lambda m: (-m["games"], -m["last"]))
     scored_games = sum(m["scored"] for m in out)
     total["avg"] = round(total["score"] / scored_games) if scored_games else None
-    return {"pilot": me, "since": since or None, "total": total, "mechs": out}
+    return {"pilot": me, "total": total, "mechs": out}
+
+
+def _since_map() -> dict:
+    m = svc.cfg.get("stats_since") if svc else None
+    return m if isinstance(m, dict) else {}
 
 
 def _save_cfg():
@@ -526,21 +533,25 @@ def _save_cfg():
 
 
 @app.post("/api/mymechs/reset")
-async def reset_my_mechs():
-    """A clean start for the MECH BOARD: stats count from now on. The match records stay."""
-    svc.cfg["stats_since"] = time.time()
+async def reset_my_mech(body: dict):
+    """A clean start for one mech: its stats count from now on. The match records stay."""
+    mech = str(body.get("mech") or "").strip()
+    if not mech:
+        return {"error": "which mech?"}
+    m = _since_map(); m[mech] = time.time(); svc.cfg["stats_since"] = m
     _save_cfg()
     svc.records_v = getattr(svc, "records_v", 0) + 1
-    return {"since": svc.cfg["stats_since"]}
+    return {"mech": mech, "since": m[mech]}
 
 
 @app.post("/api/mymechs/restore")
-async def restore_my_mechs():
-    """Undo the reset: the board counts every record again."""
-    svc.cfg.pop("stats_since", None)
+async def restore_my_mech(body: dict):
+    """Undo one mech's reset: every record counts again for it."""
+    mech = str(body.get("mech") or "").strip()
+    m = _since_map(); m.pop(mech, None); svc.cfg["stats_since"] = m
     _save_cfg()
     svc.records_v = getattr(svc, "records_v", 0) + 1
-    return {"since": None}
+    return {"mech": mech, "since": None}
 
 
 @app.get("/api/records/{match_id}")
