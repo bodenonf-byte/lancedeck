@@ -454,6 +454,7 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .recmedals li.none { color: var(--dim); font-style: italic; }
 .recdel { position: absolute; right: 8px; top: 8px; background: transparent; border: 1px solid var(--edge); color: var(--dim); width: 22px; height: 22px; cursor: pointer; font-size: 11px; }
 .recdel:hover { color: var(--red); border-color: var(--red); }
+.recdel.armed, .statsbtn.armed { width: auto; padding: 0 8px; color: #fff; background: var(--red); border-color: var(--red); font: 700 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .14em; }
 #recordsView .empty { padding: 30px; text-align: center; font-size: 13px; }
 :root[data-theme="normal"] .rec { background: rgba(255,255,255,.9); } :root[data-theme="normal"] .rechead b, :root[data-theme="normal"] .recmedals li em { color: #1a2230; }
 

@@ -288,10 +288,21 @@ document.getElementById("records").addEventListener("click", async e => {
     return;
   }
   const b = e.target.closest(".recdel"); if (!b) return;
-  if (!confirm("Delete this match record?")) return;
-  await fetch("/api/records/" + encodeURIComponent(b.dataset.id), {method: "DELETE"});
+  if (!armed(b, "SURE?")) return;
+  const r = await fetch("/api/records/" + encodeURIComponent(b.dataset.id), {method: "DELETE"}).then(r => r.json()).catch(() => null);
+  if (!r || !r.removed) { b.textContent = "FAILED"; b.title = "the helper could not remove the record files"; return; }
   loadRecords();
 });
+
+// Two-step buttons instead of the browser's confirm box, which game overlays and app windows
+// tend to swallow: the first click arms the button (red, new label), a second click within 4 s
+// goes through, otherwise it disarms itself.
+function armed(btn, label) {
+  if (btn.dataset.armed) { clearTimeout(btn._disarm); delete btn.dataset.armed; btn.classList.remove("armed"); btn.innerHTML = btn._label; return true; }
+  btn.dataset.armed = "1"; btn._label = btn.innerHTML; btn.innerHTML = label; btn.classList.add("armed");
+  btn._disarm = setTimeout(() => { delete btn.dataset.armed; btn.classList.remove("armed"); btn.innerHTML = btn._label; }, 4000);
+  return false;
+}
 
 // ── MY MECHS: what the pilot has played, mech by mech, out of the records ──────────────
 let myMechsBusy = false;
@@ -332,8 +343,8 @@ async function loadMyMechs() {
   } catch (e) { /* the helper may be restarting */ }
   finally { myMechsBusy = false; }
 }
-document.getElementById("statsReset").addEventListener("click", async () => {
-  if (!confirm("Reset your mech stats?\n\nThe MY MECHS board starts counting from now. Your match records are kept, and SHOW ALL HISTORY brings the old stats back.")) return;
+document.getElementById("statsReset").addEventListener("click", async e => {
+  if (!armed(e.currentTarget, "SURE? RECORDS ARE KEPT")) return;
   await fetch("/api/mymechs/reset", {method: "POST"});
   loadMyMechs();
 });
