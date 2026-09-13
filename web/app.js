@@ -248,10 +248,10 @@ function renderLances(d) {
 }
 
 // ── RECORDS: the final screen of every match, newest first ──────────────────────────
-let recordsV = -1, recordsBusy = false;
+let recordsV = -1, recordsBusy = false, recordsAgain = false;
 function fmtDate(ts) { const d = new Date((ts || 0) * 1000); return d.toLocaleDateString(undefined, {weekday: "short", day: "2-digit", month: "short"}) + " · " + d.toLocaleTimeString(undefined, {hour: "2-digit", minute: "2-digit"}); }
 async function loadRecords() {
-  if (recordsBusy) return; recordsBusy = true;
+  if (recordsBusy) { recordsAgain = true; return; } recordsBusy = true;
   try {
     const list = await fetch("/api/records").then(r => r.json());
     list.sort((a, b) => (b.started || b.saved || 0) - (a.started || a.saved || 0));
@@ -273,7 +273,7 @@ async function loadRecords() {
           <div class="recteams" id="rb-${r.match_id}" hidden></div>
         </article>`).join("")}</div>`).join("") : '<div class="empty">The final screen of each match is kept here once the results table has been read. Stay on the results screen a couple of seconds at the end of a match.</div>';
   } catch (e) { /* the helper may be restarting */ }
-  recordsBusy = false;
+  finally { recordsBusy = false; if (recordsAgain) { recordsAgain = false; loadRecords(); } }
 }
 document.getElementById("records").addEventListener("click", async e => {
   const bb = e.target.closest(".recboard");
@@ -305,15 +305,15 @@ function armed(btn, label) {
 }
 
 // ── MY MECHS: what the pilot has played, mech by mech, out of the records ──────────────
-let myMechsBusy = false;
+let myMechsBusy = false, myMechsAgain = false;   // a call during a load runs once more after it
 async function loadMyMechs() {
-  if (myMechsBusy) return; myMechsBusy = true;
+  if (myMechsBusy) { myMechsAgain = true; return; } myMechsBusy = true;
   try {
     const d = await fetch("/api/mymechs").then(r => r.json());
     const t = d.total || {};
     document.getElementById("myTotal").textContent = t.games
       ? `${escapeHtml(d.pilot).toUpperCase()} · ${t.games} GAME${t.games > 1 ? "S" : ""} · ${t.wins} W / ${t.losses} L${t.avg != null ? " · AVG SCORE " + t.avg : ""}${t.best ? " · BEST " + t.best : ""} · ${MEDAL[1]} ${t.medals[0]} ${MEDAL[2]} ${t.medals[1]} ${MEDAL[3]} ${t.medals[2]}`
-      : (d.pilot ? "NO MATCH RECORDED YET FOR " + escapeHtml(d.pilot).toUpperCase() : "SET YOUR PILOT NAME FIRST");
+      : (d.pilot ? (d.mechs && d.mechs.length ? escapeHtml(d.pilot).toUpperCase() + " · NO GAME COUNTED SINCE THE RESET" : "NO MATCH RECORDED YET FOR " + escapeHtml(d.pilot).toUpperCase()) : "SET YOUR PILOT NAME FIRST");
     const host = document.getElementById("myMechs");
     if (!d.mechs || !d.mechs.length) { host.innerHTML = '<div class="empty">Your mechs appear here after the first match whose results screen was read. Stay on the results a couple of seconds at the end of a match.</div>'; return; }
     host.innerHTML = d.mechs.map(m => {
@@ -342,7 +342,7 @@ async function loadMyMechs() {
       </article>`;
     }).join("");
   } catch (e) { /* the helper may be restarting */ }
-  finally { myMechsBusy = false; }
+  finally { myMechsBusy = false; if (myMechsAgain) { myMechsAgain = false; loadMyMechs(); } }
 }
 document.getElementById("myMechs").addEventListener("click", async e => {
   const r = e.target.closest(".mmreset"), u = e.target.closest(".mmundo");
