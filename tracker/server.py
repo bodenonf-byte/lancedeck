@@ -97,7 +97,7 @@ class Service:
                 self.stats["frames"] += 1; self.stats["ocr_ms"] = ms; self.stats["last_kind"] = raw.kind
             else:
                 self.stats["panel_frames"] += 1; self.stats["panel_ms"] = ms
-            if raw.kind != "none" or raw.map or self.state is None:
+            if raw.kind != "none" or raw.map or self.state is None or getattr(st, "spectating", "") != getattr(self.state, "spectating", ""):
                 self.state = st; self.version += 1
         # a record needs the real results screen: a VICTORY/DEFEAT read, or a scored table with
         # most pilots carrying a match score — never a mid-match TAB

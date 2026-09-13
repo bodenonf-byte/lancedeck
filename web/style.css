@@ -317,6 +317,14 @@ main#content { padding: 16px 26px 20px; display: block; }
 .pad.me .plate { box-shadow: 0 0 0 1px var(--amber), 0 0 16px color-mix(in srgb, var(--amber) 55%, transparent); }
 .pad.me .pl-pilot { color: var(--amber); font-weight: 700; }
 .pad.me .render img { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--amber) 80%, transparent)); }
+/* the seat you are watching from the spectator view after your own death */
+.pad.spec .plate { box-shadow: 0 0 0 1px var(--cyan), 0 0 18px color-mix(in srgb, var(--cyan) 65%, transparent); border-top-color: var(--cyan); }
+.pad.spec .pl-pilot { color: var(--cyan); font-weight: 700; }
+.pad.spec .render img { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--cyan) 85%, transparent)); }
+.pad.spec .render .floor { border-color: var(--cyan); box-shadow: 0 0 30px color-mix(in srgb, var(--cyan) 55%, transparent); }
+.pad .render .spotted.spec { z-index: 4; animation: specblink 1.6s ease-in-out infinite; }
+@keyframes specblink { 50% { opacity: .55; } }
+.dropstate.spec { color: var(--cyan); border-color: var(--cyan); background: rgba(94,234,212,.08); box-shadow: 0 0 20px rgba(94,234,212,.15); }
 .pad.open { opacity: .38; }
 .pad.open .render::before { border-style: dashed; }
 .pad.open .seatno { position: relative; z-index: 1; font: 800 30px/1 "Barlow Condensed", sans-serif; color: rgba(255,255,255,.3); margin-bottom: 28%; }

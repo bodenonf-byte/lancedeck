@@ -157,6 +157,8 @@ class TeamState:
     result: str = ""        # VICTORY / DEFEAT / "" once the end table has been seen
     mode: str = ""          # CONQUEST / ASSAULT / ... from the drop screen
     seen: list | None = None    # enemy mechs sighted but not yet tied to a pilot
+    spectator: Slot | None = None   # the pilot being watched after your death (raw read of this frame)
+    spectating: str = ""            # that pilot's name as the roster knows it (set by the roster)
     frozen: bool = False
 
     def as_dict(self):
@@ -225,6 +227,40 @@ def best_code(row: list[Line], db: MechDB):
 
 def unknown_slot(pilot: str, status: str, lance: str, br: float, y: int) -> Slot:
     return Slot(pilot, None, "", "unknown", 0, "Unknown", "", "", "", status != "DEAD", status, None, lance, br, 0.0, y)
+
+
+SPECTATING = re.compile(r"^\W*SPECTATING\W*$")
+
+
+def detect_spectator(rows, lines: list[Line], img: Image.Image, db: MechDB) -> Slot | None:
+    """The spectator overlay after your own death: "< SPECTATING >" with the watched pilot's
+    name on the line under it (left of the screen), and the watched mech's paper doll in the
+    bottom-left corner with its name and code ("EBON JAGUAR EBJ-A").  A Slot for the watched
+    pilot, the mech filled in when the corner read it; None when nobody is being watched."""
+    spec = next((l for l in lines if SPECTATING.match(l.text.upper())), None)
+    if spec is None:
+        return None
+    h = max(spec.h, 8)
+    below = [l for l in lines
+             if spec.cy + 0.5 * h < l.cy < spec.cy + 2.6 * h and l.x0 < spec.x1 + h and l.x1 > spec.x0 - 6 * h
+             and not re.search(r"SPECTAT|PLAYERS|EXIT|ESC\b", l.text.upper())]
+    if not below:
+        return None
+    pilot = clean_name(min(below, key=lambda l: l.cy).text)
+    if len(pilot) < 2:
+        return None
+    sl = unknown_slot(pilot, "ALIVE", "", 0.0, int(spec.cy))
+    best = None
+    for r in rows:
+        if all(l.cy > img.height * 0.72 and l.x1 < img.width * 0.45 for l in r):
+            b = best_code(r, db)
+            if b and (best is None or b[3] > best[3]):
+                best = b
+    if best:
+        ch, variant = best[0], best[1]
+        sl.code, sl.variant, sl.name, sl.tons, sl.cls = ch.code, variant, ch.name, ch.tons, ch.cls
+        sl.faction, sl.pros, sl.cons, sl.conf = ch.faction, ch.pros, ch.cons, best[3]
+    return sl
 
 
 def build(lines: list[Line], img: Image.Image, db: MechDB, cfg: dict, source: str) -> TeamState:
@@ -379,6 +415,7 @@ def build(lines: list[Line], img: Image.Image, db: MechDB, cfg: dict, source: st
     else:
         st = TeamState("none", [], [], source, time.time(), img.width, img.height, "nothing recognised")
     st.map = map_name; st.mode = mode
+    st.spectator = detect_spectator(rows, lines, img, db)
     return st
 
 

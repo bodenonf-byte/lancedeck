@@ -182,6 +182,8 @@ class Roster:
         self.started = 0.0
         self.memory: dict[str, dict] = {}   # pilot -> the mech he drove in a recent game (last 5 records)
         self.last_target: tuple | None = None   # (pilot, code, variant, ts) from the reticle's target readout
+        self.spectating = ""           # the team-mate being watched after your death, as the board names him
+        self.spectating_ts = 0.0       # when the spectator overlay was last read
 
     # ── scoreboard ───────────────────────────────────────────────────────────
     def _scoreboard(self, st: TeamState) -> None:
@@ -362,7 +364,7 @@ class Roster:
         if st.kind == "target" and st.enemy:
             self._target(st); self.updated = st.ts
             out = TeamState(self.last_kind, list(self.mine), list(self.enemy), st.source, self.updated or st.ts, st.frame_w, st.frame_h, "", self.map)
-            out.result = self.result; out.mode = self.mode; out.seen = list(self.seen); out.frozen = self.frozen
+            out.result = self.result; out.mode = self.mode; out.seen = list(self.seen); out.frozen = self.frozen; out.spectating = self.spectating
             return out
         # the lance setup stays up after the match — through the results, the MechLab, the queue —
         # until the next match's loading screen replaces it.  A map name read on some other
@@ -377,12 +379,32 @@ class Roster:
         elif st.kind == "hud" and (st.mine or st.enemy):
             self._hud(st); self.updated = st.ts; self.last_kind = "hud"; self.hud_hits += 1
         self._suppose()
+        self._spectator(st)
         set_known([s.pilot for s in self.mine + self.enemy])
         out = TeamState(self.last_kind, list(self.mine), list(self.enemy), st.source,
                         self.updated or st.ts, st.frame_w, st.frame_h, st.note, self.map)
         out.result = self.result; out.mode = self.mode
-        out.seen = list(self.seen); out.frozen = self.frozen
+        out.seen = list(self.seen); out.frozen = self.frozen; out.spectating = self.spectating
         return out
+
+    def _spectator(self, st: TeamState) -> None:
+        """Who the spectator overlay says you are watching: tied to the team-mate it names
+        (the corner's mech fills his seat when the board has none yet), forgotten 12 s after
+        the overlay was last seen — you are back in a lobby, or the next match."""
+        sp = getattr(st, "spectator", None)
+        if sp is not None:
+            tgt = max(self.mine, key=lambda s: _score(sp.pilot, s.pilot), default=None)
+            if tgt is not None and _score(sp.pilot, tgt.pilot) >= 0.7:
+                if tgt.pilot != self.spectating:
+                    _log("SPECTATING", tgt)
+                self.spectating = tgt.pilot
+                if sp.code and (tgt.code is None or tgt.guess):
+                    _take_mech(tgt, sp); tgt.locked = True
+            else:
+                self.spectating = sp.pilot          # not on the board (yet): the name as read
+            self.spectating_ts = st.ts
+        elif self.spectating and st.ts - self.spectating_ts > 12:
+            self.spectating = ""
 
     def _suppose(self) -> None:
         """A pilot seen in one of the last games, whose mech this match has not shown yet, is
@@ -401,4 +423,4 @@ class Roster:
             _log("SUPPOSED", s)
 
     def clear(self):
-        self.mine = []; self.enemy = []; self.updated = time.time(); self.last_kind = "none"; self.map = ""; self.result = ""; self.mode = ""; self.frozen = False; self.seen = []; self.match_id = ""
+        self.mine = []; self.enemy = []; self.updated = time.time(); self.last_kind = "none"; self.map = ""; self.result = ""; self.mode = ""; self.frozen = False; self.seen = []; self.match_id = ""; self.spectating = ""

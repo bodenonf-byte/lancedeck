@@ -108,6 +108,7 @@ function seatLances(slots) {
 function pad(s, i) {
   if (!s) return `<div class="pad open"><div class="render"><span class="seatno">${i + 1}</span></div><div class="plate"><div class="pl-name">OPEN SEAT</div><div class="pl-pilot">waiting for the drop screen</div></div></div>`;
   const cutp = cutOf(s), pic = cutp || picOf(s), me = isMe(s);
+  const spec = !!specName && !!s.pilot && specName.toLowerCase().replace(/\s+/g, "") === s.pilot.toLowerCase().replace(/\s+/g, "");
   const role = roleOf(s);
   const hpv = hpOf(s);
   // damage taken, as read off the lance panel / target readout: the bar is what is LEFT, the
@@ -117,9 +118,10 @@ function pad(s, i) {
   const dmg = !s.alive ? "DESTROYED" : hpv == null ? "HP —" : `HP ${hpv}%`;
   // damage DEALT comes from the results table only, so it shows once the end screen is read
   const dealt = s.damage != null ? `<span class="dealt" title="damage dealt, from the results table">DMG ${s.damage}</span>` : "";
-  return `<div class="pad c-${s.cls || "Unknown"} ${s.alive ? "" : "dead"} ${me ? "me" : ""} ${s.code ? "" : "nomech"} ${cutp ? "cut" : ""} ${s.guess ? "guess" : ""} ${s.medal ? "medal" + s.medal : ""}" title="${escapeHtml(s.pilot)}${s.pros ? " · + " + escapeHtml(s.pros) + " · − " + escapeHtml(s.cons) : ""}">
+  return `<div class="pad c-${s.cls || "Unknown"} ${s.alive ? "" : "dead"} ${me ? "me" : ""} ${spec ? "spec" : ""} ${s.code ? "" : "nomech"} ${cutp ? "cut" : ""} ${s.guess ? "guess" : ""} ${s.medal ? "medal" + s.medal : ""}" title="${escapeHtml(s.pilot)}${s.pros ? " · + " + escapeHtml(s.pros) + " · − " + escapeHtml(s.cons) : ""}">
     <div class="render">
       <div class="floor"></div>
+      ${spec ? '<span class="spotted spec" title="the mech you are watching from the spectator view">👁 SPECTATING</span>' : ""}
       ${s.code ? `<a class="build" href="${buildUrl(s)}" target="_blank" rel="noopener" title="builds for the ${escapeHtml(s.name)} ${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""} on GrimMechs">` : ""}${pic ? `<img src="${pic}" alt="">` : `<span class="code">${s.code || "?"}</span>`}${s.code ? "</a>" : ""}
       ${s.code ? `<b class="tons">${s.tons}t</b>` : ""}
       ${me ? '<span class="you">YOU</span>' : ""}
@@ -221,7 +223,9 @@ function overview(slots, enemy) {
   </div>`;
 }
 const LANCE_ROLES = ["FRONTLINE<br><small>(BRAWL)</small>", "FIRE SUPPORT<br><small>(MID RANGE)</small>", "MANEUVER<br><small>(SCOUT)</small>"];
+let specName = "";                                   // the team-mate being watched after your death, this render
 function renderTeam(id, slots, enemy, d) {
+  specName = enemy ? "" : (d.spectating || "");
   const seats = seatLances(slots);
   const alive = slots.filter(s => s.alive).length;
   document.getElementById(id).innerHTML = `
@@ -368,6 +372,7 @@ function renderFooter(d) {
   const st = document.getElementById("dropState");
   let text = "WAITING FOR DROP", cls = "";
   if (d.result) { text = d.result; cls = d.result.toLowerCase(); }
+  else if (d.spectating) { text = "SPECTATING " + escapeHtml(d.spectating).toUpperCase(); cls = "spec"; }
   else if (d.frozen) { text = "IN MATCH · LOCKED"; cls = "live"; }
   else if ((d.mine || []).length) { text = "READING THE DROP"; cls = "live"; }
   st.textContent = text; st.className = "dropstate " + cls;
