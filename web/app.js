@@ -122,14 +122,13 @@ function pad(s, i) {
       <div class="floor"></div>
       ${s.code ? `<a class="build" href="${buildUrl(s)}" target="_blank" rel="noopener" title="builds for the ${escapeHtml(s.name)} ${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""} on GrimMechs">` : ""}${pic ? `<img src="${pic}" alt="">` : `<span class="code">${s.code || "?"}</span>`}${s.code ? "</a>" : ""}
       ${s.code ? `<b class="tons">${s.tons}t</b>` : ""}
-      ${medalOf(s)}
       ${me ? '<span class="you">YOU</span>' : ""}
       ${s.alive ? "" : '<span class="tx">✕</span>'}
       ${s.status === "SEEN" ? '<span class="spotted">SPOTTED</span>' : ""}
       ${s.guess ? '<span class="spotted guessed" title="the mech this pilot drove in a recent game — not read yet this match">LAST GAME?</span>' : ""}
     </div>
     <div class="plate">
-      <span class="cls-ico">${CLASS_ICON[s.cls] || "?"}</span>
+      ${medalOf(s) || `<span class="cls-ico">${CLASS_ICON[s.cls] || "?"}</span>`}
       <div class="pl-name">${s.code ? `${escapeHtml(s.name)} <b>${s.code}${s.variant ? "-" + escapeHtml(s.variant) : ""}</b>` : "MECH NOT SHOWN"}</div>
       <div class="pl-pilot">${escapeHtml(s.pilot)}</div>
       <div class="pl-meta">${s.code ? `<span>${s.tons}t</span>` : ""}${role ? `<span class="role">${role}</span>` : ""}${s.score != null ? `<span class="score">${s.score}</span>` : ""}${dealt}<span class="dmg ${lvl}" title="${hpv != null && s.alive ? hpv + "% left, as read off the lance panel or the target readout" : s.alive ? "no health read yet for this mech" : "destroyed"}">${dmg}</span></div>

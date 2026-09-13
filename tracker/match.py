@@ -389,7 +389,8 @@ MAPS = ["Alpine Peaks", "Bearclaw", "Boreal Vault", "Canyon Network", "Caustic V
         "River City", "Rubellite Oasis", "Solaris City", "Sulfurous Rift", "Terra Therma", "Tourmaline Desert",
         "Viridian Bog", "Vitric Forge", "Luthien", "Ceres Metal Scrapyard", "Mech Factory", "Boreal Reach", "Liao Jungle",
         "Ishiyama Caves", "Emerald Vale", "Hellebore Outpost", "Vitric Station", "Terra Therma Crucible", "Steiner Coliseum"]
-_MAP_KEYS = [(re.sub(r"[^A-Z]", "", m.upper()), m) for m in MAPS]
+_MAP_ALIASES = {"Free Worlds Colosseum": "Free Worlds Coliseum"}    # the game's own spelling on the results screen
+_MAP_KEYS = [(re.sub(r"[^A-Z]", "", m.upper()), m) for m in MAPS] + [(re.sub(r"[^A-Z]", "", a.upper()), m) for a, m in _MAP_ALIASES.items()]
 
 
 def detect_map(texts: list[str]) -> str:
@@ -423,8 +424,12 @@ def _column_x(rows, pat: str) -> float | None:
     rx = re.compile(pat)
     for row in rows:
         for l in row:
-            if rx.search(l.text.upper()):
-                return (l.x0 + l.x1) / 2
+            m = rx.search(l.text.upper())
+            if m:
+                # the header can come back merged with its neighbours ("ASSISTS DMG PING"): the
+                # word's place in the text says where the column is, not the line's centre
+                frac = (m.start() + m.end()) / 2 / max(len(l.text), 1)
+                return l.x0 + frac * (l.x1 - l.x0)
     return None
 
 
@@ -437,8 +442,12 @@ def _damage(row, after_x: int, dmg_x: float | None, tol: float) -> int | None:
         if l.x0 < after_x or "%" in l.text or TIME_TOKEN.search(l.text):
             continue
         t = strip_codes(l.text)
+        # two cells often come back as ONE OCR line ("8 506": assists and damage) — place each
+        # number by where it sits in the text, or both would share the line's centre and the
+        # first one (assists) would win the nearest-to-DMG test
         for m in NUM.finditer(t):
-            cells.append(((l.x0 + l.x1) / 2, int(m.group(1))))
+            frac = (m.start() + m.end()) / 2 / max(len(t), 1)
+            cells.append((l.x0 + frac * (l.x1 - l.x0), int(m.group(1))))
     if not cells:
         return None
     if dmg_x is not None:

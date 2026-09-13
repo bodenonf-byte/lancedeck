@@ -285,7 +285,9 @@ main#content { padding: 16px 26px 20px; display: block; }
 .mini a.build { display: contents; cursor: pointer; }
 .pad .render .code { position: relative; z-index: 1; font: 800 26px/1 "Barlow Condensed", sans-serif; letter-spacing: .1em; color: rgba(255,255,255,.35); margin-bottom: 26%; }
 .pad .render .tons { position: absolute; right: 4px; top: 4px; z-index: 2; font: 700 11px/1 "Barlow Condensed", sans-serif; letter-spacing: .06em; color: var(--hud2); background: rgba(0,0,0,.6); padding: 3px 5px; border: 1px solid rgba(255,255,255,.12); }
-.pad .render .medal { position: absolute; left: 4px; top: 0; z-index: 2; font-size: 24px; filter: drop-shadow(0 0 6px rgba(0,0,0,.8)); }
+/* the medal sits in the plate's top-left corner, where the class icon would be — on the
+   perspective seats anything over the render ends up behind the mech picture */
+.pad .plate .medal { position: absolute; left: 4px; top: 3px; z-index: 3; font-size: 17px; filter: drop-shadow(0 0 4px rgba(0,0,0,.8)); }
 .pad .render .you { bottom: 8%; }
 .pad .render .tx { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 60px; font-weight: 900; color: var(--red); text-shadow: 0 0 10px #000; }
 .pad .render .spotted { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); z-index: 2; font: 700 9px/1 "Barlow Condensed", sans-serif; letter-spacing: .16em; color: #06282a; background: var(--cyan); padding: 3px 6px; }
@@ -296,7 +298,8 @@ main#content { padding: 16px 26px 20px; display: block; }
 .pad .pl-name b { color: var(--cyan); font-weight: 600; margin-left: 4px; }
 .pad .pl-pilot { font: 600 11px/1.2 "Barlow", sans-serif; color: #c9d1db; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .pad .pl-pilot:hover { color: var(--hud2); }
-.pad .pl-meta { display: flex; gap: 8px; font: 700 10px/1.2 "Barlow Condensed", sans-serif; letter-spacing: .12em; color: var(--dim); margin-top: 2px; }
+.pad .pl-meta { display: flex; flex-wrap: wrap; gap: 1px 8px; font: 700 10px/1.2 "Barlow Condensed", sans-serif; letter-spacing: .12em; color: var(--dim); margin-top: 2px; }
+.pad .pl-meta > span { white-space: nowrap; }      /* a narrow seat wraps whole items, never clips "DMG 506" to "DM" */
 .pad .pl-meta .role { color: #eef2f7; }
 .pad .pl-meta .score { color: var(--hud2); } .pad .pl-meta .hpn { color: var(--green); margin-left: auto; }
 .pad .pl-meta .dealt { color: var(--hud2); font-weight: 800; }          /* damage dealt, results table */
@@ -519,7 +522,7 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
     repeating-linear-gradient(0deg, transparent 0 9px, rgba(255,255,255,.08) 9px 10px), repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,255,255,.08) 9px 10px), linear-gradient(180deg, rgba(255,255,255,.1), rgba(0,0,0,.45)); }
 .pad[class*="medal"] .plate { border: 2px solid var(--med); border-top-width: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 18px color-mix(in srgb, var(--med) 55%, transparent), inset 0 0 20px color-mix(in srgb, var(--med) 12%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--med) 16%, rgba(20,26,34,.96)), rgba(12,16,22,.96)); }
 .pad[class*="medal"] .pl-name { color: var(--med); }
-.pad[class*="medal"] .render .medal { left: 50%; top: -6px; transform: translateX(-50%); font-size: 30px; }
+.pad[class*="medal"] .pl-name { padding-right: 54px; }     /* room for the GOLD / SILVER / BRONZE tag */
 .pad .plate::after { position: absolute; right: 8px; top: 4px; font: 800 9px/1 "Barlow Condensed", sans-serif; letter-spacing: .18em; color: #1a1408; background: var(--med); padding: 2px 6px; clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0 100%); }
 .pad.medal1 .plate::after { content: "GOLD"; } .pad.medal2 .plate::after { content: "SILVER"; } .pad.medal3 .plate::after { content: "BRONZE"; }
 .pad.dead[class*="medal"] { opacity: .85; filter: grayscale(.35); }
