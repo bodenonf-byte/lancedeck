@@ -496,6 +496,14 @@ document.getElementById("content").addEventListener("click", e => {          // 
   if (!p) return;
   meBox.value = p.textContent.trim(); saveMe();
 });
+// the build-guide links: opened by hand, so the click works in every browser and in the
+// embedded ones (overlays, app windows) that do not follow a link wrapped around a picture
+document.addEventListener("click", e => {
+  const a = e.target.closest("a.build");
+  if (!a || !a.href) return;
+  e.preventDefault();
+  window.open(a.href, "_blank", "noopener");
+});
 document.getElementById("liveBtn").onclick = async () => {
   const on = document.getElementById("liveBtn").textContent.endsWith("OFF");
   await fetch("/api/live", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({on})});
