@@ -10,3 +10,4 @@ dxcam
 mss
 pyinstaller
 pystray
+cryptography

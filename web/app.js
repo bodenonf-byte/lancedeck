@@ -256,21 +256,28 @@ function fmtDate(ts) { const d = new Date((ts || 0) * 1000); return d.toLocaleDa
 async function loadRecords() {
   if (recordsBusy) { recordsAgain = true; return; } recordsBusy = true;
   try {
-    const list = await fetch("/api/records").then(r => r.json());
+    const all = await fetch("/api/records").then(r => r.json());
+    loadVault();
+    const imported = all.filter(r => r.origin).length;
+    const fbtn = document.getElementById("recFilter");
+    fbtn.hidden = !imported; fbtn.textContent = prefs.recFilter === "mine" ? "MINE" : "ALL";
+    const list = prefs.recFilter === "mine" ? all.filter(r => !r.origin) : all;
     list.sort((a, b) => (b.started || b.saved || 0) - (a.started || a.saved || 0));
-    document.getElementById("recCount").textContent = list.length ? `${list.length} MATCH${list.length > 1 ? "ES" : ""} · ${list.filter(r => r.result === "VICTORY").length} W / ${list.filter(r => r.result === "DEFEAT").length} L` : "NO MATCH RECORDED YET";
+    const own = all.filter(r => !r.origin);
+    document.getElementById("recCount").textContent = own.length ? `${own.length} MATCH${own.length > 1 ? "ES" : ""} · ${own.filter(r => r.result === "VICTORY").length} W / ${own.filter(r => r.result === "DEFEAT").length} L${imported ? ` · ${imported} IMPORTED` : ""}` : (imported ? `${imported} IMPORTED · NONE OF YOURS YET` : "NO MATCH RECORDED YET");
     const byDay = new Map();
     for (const r of list) { const k = new Date((r.started || r.saved || 0) * 1000).toDateString(); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(r); }
     document.getElementById("records").innerHTML = list.length ? [...byDay.entries()].map(([day, rs]) => `
       <h4 class="recday">${day.toUpperCase()}</h4>
       <div class="recgrid">${rs.map(r => `
-        <article class="rec ${(r.result || "").toLowerCase()}">
+        <article class="rec ${(r.result || "").toLowerCase()}${r.origin ? " foreign" : ""}">
           <a class="shot" href="${r.image || "#"}" target="_blank" title="open the full screen">${r.image ? `<img src="${r.image}?v=${r.saved || 0}" alt="">` : '<div class="noshot">no screen kept</div>'}
             <span class="res">${r.result || "MATCH"}</span></a>
           <div class="recbody">
             <div class="rechead"><b>${escapeHtml(r.map || "unknown map")}</b><span>${escapeHtml(r.mode || "")}</span><span class="recright"><time>${fmtDate(r.started || r.saved)}</time><button class="recboard" data-id="${r.match_id}">BOARD ▾</button><button class="recdel" data-id="${r.match_id}" title="delete this record">✕</button></span></div>
+            ${r.origin ? originLine(r) : ""}
             <div class="recscore"><span class="mine">${r.mine_alive}/${r.mine}</span> alive <em>vs</em> <span class="foe">${r.enemy_alive}/${r.enemy}</span></div>
-            ${r.me ? `<div class="recme">${r.me.code ? escapeHtml(r.me.name) + " " + r.me.code + (r.me.variant ? "-" + escapeHtml(r.me.variant) : "") : "mech not shown"}${r.me.score != null ? ` · score ${r.me.score}` : ""}${r.me.medal ? " " + MEDAL[r.me.medal] : ""}${r.me.alive ? "" : " · destroyed"}</div>` : ""}
+            ${r.me && !r.origin ? `<div class="recme">${r.me.code ? escapeHtml(r.me.name) + " " + r.me.code + (r.me.variant ? "-" + escapeHtml(r.me.variant) : "") : "mech not shown"}${r.me.score != null ? ` · score ${r.me.score}` : ""}${r.me.medal ? " " + MEDAL[r.me.medal] : ""}${r.me.alive ? "" : " · destroyed"}</div>` : ""}
             <div class="recrow">
               <ul class="recmedals">${(r.medals || []).map(m => `<li><i>${MEDAL[m.medal]}</i><b class="${m.side}">${escapeHtml(m.pilot)}</b><span>${m.code ? escapeHtml(m.name || "") + " " + m.code + (m.variant ? "-" + escapeHtml(m.variant) : "") : ""}</span><em>${m.score != null ? m.score : ""}</em></li>`).join("") || '<li class="none">no scores read</li>'}</ul>
               ${podiumOf(r)}
@@ -315,6 +322,88 @@ document.getElementById("records").addEventListener("click", async e => {
   if (!r || !r.removed) { b.textContent = "FAILED"; b.title = "the helper could not remove the record files"; return; }
   loadRecords();
 });
+
+// ── imported records: whose they are and whether they check out ──────────────────────
+// A share bundle is signed by its owner's key (was the file changed since export?) and each
+// record's end screen is re-read after the import (do the numbers match the picture?).
+function verdictOf(r) {
+  const v = r.verified || {};
+  if (v.signature === false) return ["bad", "UNVERIFIED FILE", "the bundle's signature or file hashes did not check out: the file was changed after export, or was not signed"];
+  switch (v.picture) {
+    case "ok": return ["ok", "VERIFIED", "signed by its owner's key, and the numbers match the end screen picture"];
+    case "mismatch": return ["bad", "PICTURE DIFFERS", (v.notes || []).join("\n") || "the record's numbers do not match its end screen picture"];
+    case "unreadable": return ["warn", "PICTURE UNREADABLE", (v.notes || []).join("\n") || "the end screen could not be read well enough to compare"];
+    case "no picture": return ["warn", "NO PICTURE", "the bundle carried no end screen for this match: nothing to check the numbers against"];
+    case "pending": return ["dim", "CHECKING PICTURE…", "the end screen is being re-read in the background"];
+    default: return ["dim", "UNCHECKED", "signed, picture not checked yet"];
+  }
+}
+function originLine(r) {
+  const [cls, label, tip] = verdictOf(r);
+  const fp = (r.origin.fingerprint || "").split("-")[0];
+  return `<div class="recfrom"><b title="imported from ${escapeHtml(r.origin.pilot || "?")}'s bundle · key ${escapeHtml(r.origin.fingerprint || "")}">FROM ${escapeHtml((r.origin.pilot || "?").toUpperCase())} · ${escapeHtml(fp)}</b><i class="${cls}" title="${escapeHtml(tip)}">${label}</i>${cls === "bad" || cls === "warn" ? `<button class="recheck" data-id="${r.match_id}" title="re-read the picture">RECHECK</button>` : ""}</div>`;
+}
+document.getElementById("recFilter").onclick = () => { prefs.recFilter = prefs.recFilter === "mine" ? "all" : "mine"; savePrefs(); loadRecords(); };
+document.getElementById("records").addEventListener("click", async e => {
+  const b = e.target.closest(".recheck"); if (!b) return;
+  b.textContent = "QUEUED";
+  await fetch("/api/vault/recheck", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({match_id: b.dataset.id})});
+});
+
+// ── BACKUP / SHARE / IMPORT: signed bundles of records (tracker/vault.py) ─────────────
+async function loadVault() {
+  try {
+    const d = await fetch("/api/vault").then(r => r.json());
+    const k = document.getElementById("recKey");
+    k.textContent = d.fingerprint ? `KEY ${d.fingerprint}${d.checking ? ` · CHECKING ${d.queued + 1}` : ""}` : (d.checking ? `CHECKING ${d.queued + 1}` : "");
+  } catch (e) { /* starting */ }
+}
+const vaultBox = document.getElementById("vault");
+function showVault(html, buttons) {
+  document.getElementById("vaultBody").innerHTML = html;
+  const row = document.getElementById("vaultRow"); row.innerHTML = "";
+  for (const b of buttons) { const el = document.createElement("button"); el.className = "btn" + (b.ghost ? " ghost" : ""); el.textContent = b.label; el.onclick = () => b.run(el); row.appendChild(el); }
+  vaultBox.hidden = false;
+}
+const closeVault = {label: "CLOSE", ghost: true, run: () => { vaultBox.hidden = true; }};
+vaultBox.addEventListener("click", e => { if (e.target.id === "vault") e.target.hidden = true; });
+document.getElementById("recImport").onclick = () => document.getElementById("recFile").click();
+document.getElementById("recFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  document.getElementById("vaultFile").textContent = f.name;
+  showVault(`<p>Reading the bundle…</p>`, []);
+  const fd = new FormData(); fd.append("file", f);
+  const d = await fetch("/api/vault/inspect", {method: "POST", body: fd}).then(r => r.json()).catch(() => ({error: "the helper did not answer"}));
+  if (d.error) { showVault(`<p class="bad">${escapeHtml(d.error)}</p>`, [closeVault]); return; }
+  const ok = d.signature && d.hashes;
+  const when = d.exported ? fmtDate(d.exported) : "unknown date";
+  const lines = [];
+  lines.push(`<p>A <b>${d.has_key ? "backup" : "share bundle"}</b> from <b>${escapeHtml(d.pilot || "an unnamed pilot")}</b> · key <code>${escapeHtml(d.fingerprint)}</code><br>exported ${when} with LanceDeck ${escapeHtml(d.app || "?")}.</p>`);
+  lines.push(`<p><b>${d.records}</b> record${d.records === 1 ? "" : "s"}, ${d.pictures} end screen${d.pictures === 1 ? "" : "s"}${d.already ? ` · ${d.already} already here (kept as they are)` : ""}.</p>`);
+  if (ok) lines.push(`<p class="ok">Signature and files check out: nothing was changed since ${escapeHtml(d.pilot || "the owner")} exported it.</p>`);
+  else if (!d.hashes) lines.push(`<p class="bad">Files were changed after export: ${escapeHtml([...d.changed, ...d.missing].map(x => x.replace("records/", "")).join(", ") || "see the manifest")}.</p>`);
+  else lines.push(`<p class="bad">The signature does not match: the manifest was edited, or it was not signed by the key it names.</p>`);
+  if (d.key_broken) lines.push(`<p class="bad">The private key inside does not match the manifest's public key: it cannot be restored as an identity.</p>`);
+  if (d.same_key) lines.push(`<p class="ok">This is your own key: the records come back as yours.</p>`);
+  else if (d.has_key && d.local_key) lines.push(`<p class="warn">Restoring replaces this install's key (${escapeHtml(d.local_key)}) with the backup's. Fine if the backup is yours.</p>`);
+  else if (!d.has_key) lines.push(`<p>Imported records are shown with ${escapeHtml(d.pilot || "the owner")}'s name, never counted on MY MECHS, and each end screen is re-read to check the numbers. Ask the sender for their key fingerprint and compare it with the one above.</p>`);
+  const buttons = [];
+  const go = async (el, adopt, label) => {
+    if (!ok && !armed(el, "SURE? " + label)) return;
+    showVault(`<p>Importing…</p>`, []);
+    const r = await fetch("/api/vault/import", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({adopt, unverified: !ok})}).then(r => r.json()).catch(() => ({error: "the helper did not answer"}));
+    if (r.error) { showVault(`<p class="bad">${escapeHtml(r.error)}</p>`, [closeVault]); return; }
+    showVault(`<p class="ok"><b>${r.written}</b> record${r.written === 1 ? "" : "s"} ${r.adopted ? "restored" : "imported"}${r.skipped ? `, ${r.skipped} skipped (already here or unreadable)` : ""}.</p>` +
+              (r.installed_key ? `<p>Your signing key is back: ${escapeHtml(r.fingerprint)}.</p>` : "") +
+              (r.queued && r.queued.length ? `<p>The end screens are being re-read in the background; each record shows VERIFIED or what differs as the checks land.</p>` : ""), [closeVault]);
+    loadRecords(); if ((prefs.view || "lances") === "board") loadMyMechs();
+    if (r.adopted) { lastVersion = -1; fetch("/api/state").then(r => r.json()).then(apply); }
+  };
+  if (d.has_key || d.same_key) buttons.push({label: (ok ? "" : "ANYWAY: ") + "RESTORE AS MINE", run: el => go(el, true, "RESTORE")});
+  if (!d.same_key) buttons.push({label: (ok ? "" : "ANYWAY: ") + `IMPORT AS ${(d.pilot || "THEIRS").toUpperCase()}'S`, ghost: d.has_key, run: el => go(el, false, "IMPORT")});
+  buttons.push({label: "CANCEL", ghost: true, run: () => { vaultBox.hidden = true; }});
+  showVault(lines.join(""), buttons);
+};
 
 // Two-step buttons instead of the browser's confirm box, which game overlays and app windows
 // tend to swallow: the first click arms the button (red, new label), a second click within 4 s

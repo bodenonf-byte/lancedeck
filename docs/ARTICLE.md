@@ -86,6 +86,16 @@ side survived, your own score, and the medal winners. Each record unfolds into t
 match. The last five games also remember which pilot drove which mech, so when you meet someone
 again their mech shows up as a supposition before you have even seen it.
 
+**Backup and share.** Records live next to the program, so a reinstall would lose them. The
+BACKUP button writes one zip with your records, their end screens, your per-mech reset dates and
+your signing key; IMPORT it on a fresh install and everything is back, as you. SHARE writes the
+same zip without the key, for a friend: they see your records with your name on them, kept apart
+from their own. Both are signed with a key made on your computer, so a record edited after the
+export fails the check on import, and every imported end screen is re-read to confirm the numbers
+on it. What that proves is that the file is as its owner exported it and that the numbers match
+the picture, not that the picture is genuine: a determined forger can still fake a screenshot.
+For friends keeping score with each other, that is the honest level of trust a local tool can give.
+
 ## A few honest limits
 
 - It reads text, so it can misread. A name with a strange font, a number that looks like a

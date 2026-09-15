@@ -36,6 +36,7 @@ from .match import build, TeamState
 from .mechdb import MechDB
 from .ocr import Reader, Line
 from .roster import Roster
+from . import vault
 
 from . import paths
 from .paths import ROOT, WEB, RECORDS, ASSETS, CFG_PATH, CFG_DEFAULT, APP, VERSION
@@ -295,13 +296,15 @@ def load_memory() -> dict:
     mem: dict[str, dict] = {}
     if not os.path.isdir(RECORDS):
         return mem
-    files = sorted((f for f in os.listdir(RECORDS) if f.endswith(".json")), reverse=True)[:MEMORY_GAMES]
+    files = sorted((f for f in os.listdir(RECORDS) if f.endswith(".json") and "@" not in f), reverse=True)[:MEMORY_GAMES]
     for f in reversed(files):                           # oldest first, so the latest game wins
         try:
             with open(os.path.join(RECORDS, f), encoding="utf-8") as fh:
                 d = json.load(fh)
         except Exception:
             continue
+        if vault.is_foreign(d):
+            continue                                    # another pilot's imported records: shown, never learnt from
         for s in d.get("mine", []) + d.get("enemy", []):
             if s.get("code") and not s.get("guess") and s.get("pilot") not in ("?", "spotted", ""):
                 key = re.sub(r"[^a-z0-9]", "", s["pilot"].lower())
@@ -500,7 +503,11 @@ def records():
                 continue
             mid = f[:-5]
             top = sorted([s for s in d.get("mine", []) if s.get("medal")], key=lambda s: s["medal"]) + sorted([s for s in d.get("enemy", []) if s.get("medal")], key=lambda s: s["medal"])
+            ver = d.get("verified") if isinstance(d.get("verified"), dict) else {}
             out.append({"match_id": mid, "image": f"/records/{mid}.jpg" if os.path.exists(os.path.join(RECORDS, mid + ".jpg")) else None,
+                        "origin": d.get("origin") if vault.is_foreign(d) else None,
+                        "verified": {"signature": ver.get("signature"), "picture": (ver.get("picture") or {}).get("verdict"),
+                                     "notes": (ver.get("picture") or {}).get("notes") or []} if vault.is_foreign(d) else None,
                         "map": d.get("map", ""), "mode": d.get("mode", ""), "result": d.get("result", ""), "saved": d.get("saved"), "started": d.get("started"),
                         "mine": len(d.get("mine", [])), "enemy": len(d.get("enemy", [])),
                         "mine_alive": sum(1 for s in d.get("mine", []) if s.get("alive")), "enemy_alive": sum(1 for s in d.get("enemy", []) if s.get("alive")),
@@ -531,6 +538,8 @@ def my_mechs():
                 d = json.load(fh)
         except Exception:
             continue
+        if vault.is_foreign(d):
+            continue                                    # a friend's records never count on my board
         mine = d.get("mine", [])
         s = next((x for x in mine if key and (key in re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) or re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower()) in key) and len(re.sub(r"[^a-z0-9]", "", (x.get("pilot") or "").lower())) >= 3), None)
         if not s or not s.get("code"):
@@ -620,6 +629,117 @@ def delete_record(match_id: str):
     if svc:
         svc.records_v = getattr(svc, "records_v", 0) + 1
     return {"removed": n}
+
+
+# ── backup, share, import: signed record bundles (tracker/vault.py) ─────────────────
+_pending = {"data": b"", "name": "", "at": 0.0}     # the last inspected bundle, kept for the import that follows
+_verify_q: list[str] = []
+_verify_lock = threading.Lock()
+_verifier = {"thread": None, "reader": None, "busy": ""}
+
+
+@app.get("/api/vault")
+def vault_summary():
+    d = vault.summary(svc.cfg)
+    d["checking"] = _verifier["busy"]; d["queued"] = len(_verify_q)
+    return d
+
+
+@app.get("/api/vault/export")
+def vault_export(key: int = 0):
+    """key=1: a BACKUP for yourself (records, pictures, reset dates and the signing key).
+    key=0: a SHARE bundle for someone else (no key)."""
+    name, data = export_bundle_safe(bool(key))
+    return Response(content=data, media_type="application/zip",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "no-store"})
+
+
+def export_bundle_safe(with_key: bool):
+    with svc.lock:
+        return vault.export_bundle(svc.cfg, with_key)
+
+
+@app.post("/api/vault/inspect")
+async def vault_inspect(file: UploadFile):
+    """Say what a bundle is before writing anything; the bytes wait for /api/vault/import."""
+    data = await file.read()
+    try:
+        d = vault.inspect_bundle(data, svc.cfg)
+    except ValueError as e:
+        _pending.update(data=b"", name="")
+        return {"error": str(e)}
+    _pending.update(data=data, name=file.filename or "bundle.zip", at=time.time())
+    d["file"] = _pending["name"]
+    return d
+
+
+@app.post("/api/vault/import")
+async def vault_import(body: dict):
+    """adopt: restore as my own records (a backup); otherwise import as the owner's, read-only,
+    picture-checked in the background.  unverified: go ahead even when the bundle fails its check."""
+    if not _pending["data"]:
+        return {"error": "nothing to import: choose the file again"}
+    try:
+        with svc.lock:
+            r = vault.import_bundle(_pending["data"], svc.cfg, adopt=bool(body.get("adopt")), allow_unverified=bool(body.get("unverified")))
+    except ValueError as e:
+        return {"error": str(e)}
+    _pending.update(data=b"", name="")
+    if r["cfg_changes"]:
+        svc.cfg.update(r["cfg_changes"]); _save_cfg()
+    if r["adopted"]:
+        svc.roster.memory = load_memory()
+    svc.records_v = getattr(svc, "records_v", 0) + 1
+    if r["queued"]:
+        with _verify_lock:
+            _verify_q.extend(r["queued"])
+        _start_verifier()
+    r.pop("cfg_changes", None)
+    return r
+
+
+def _start_verifier():
+    """One thread, its own CPU OCR engine (two threads: the game comes first), works through the
+    queue and writes each verdict into the record; the page refreshes as they land."""
+    t = _verifier["thread"]
+    if t and t.is_alive():
+        return
+    t = threading.Thread(target=_verify_loop, daemon=True)
+    _verifier["thread"] = t
+    t.start()
+
+
+def _verify_loop():
+    if _verifier["reader"] is None:
+        _verifier["reader"] = Reader(use_dml=False, threads=2)
+    while True:
+        with _verify_lock:
+            if not _verify_q:
+                _verifier["busy"] = ""
+                return
+            mid = _verify_q.pop(0)
+        _verifier["busy"] = mid
+        try:
+            vault.picture_check(mid, _verifier["reader"], svc.db, svc.cfg)
+        except Exception as e:
+            svc.stats["last_error"] = "verify: " + repr(e)[:160]
+        svc.records_v = getattr(svc, "records_v", 0) + 1
+        svc.version += 1
+
+
+@app.post("/api/vault/recheck")
+async def vault_recheck(body: dict):
+    """Run the picture check again on one imported record, or on every one."""
+    ids = []
+    if body.get("match_id"):
+        ids = [os.path.basename(str(body["match_id"]))]
+    elif os.path.isdir(RECORDS):
+        ids = [f[:-5] for f in sorted(os.listdir(RECORDS)) if f.endswith(".json") and "@" in f]
+    with _verify_lock:
+        _verify_q.extend(i for i in ids if i not in _verify_q)
+    if ids:
+        _start_verifier()
+    return {"queued": len(ids)}
 
 
 @app.get("/api/assets")

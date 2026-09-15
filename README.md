@@ -70,6 +70,14 @@ screen a couple of seconds at the end so the record is written.
   survival, out of your records.
 - **Records**: every match's final screen, results and medal winners, with the board of that
   match; the last five games also remember which pilot drove which mech.
+- **Backup, share, import** (in Records): BACKUP writes a zip of your records, their end screens,
+  your per-mech reset dates and your signing key; IMPORT it on a fresh install and everything is
+  back, as you. SHARE writes the same without the key: a friend imports it and sees your records
+  tagged with your name, never counted on their board. Every bundle is signed (Ed25519) with a
+  SHA-256 per file, so a file edited after export fails the import check, and each imported end
+  screen is re-read to confirm the numbers. Your key's fingerprint shows beside the buttons; tell
+  it to your friends so they can tell your bundles from someone else's. The key is
+  `identity.json` next to `config.json`: a backup carries it, a share bundle never does.
 
 ## How it is built
 

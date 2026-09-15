@@ -485,6 +485,21 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .recpodium.enemy .pseat b { color: #ff9a8c; }
 .pseat span { font-size: 9px; color: var(--dim); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pseat em { font-style: normal; font: 800 13px/1 "Barlow Condensed", sans-serif; color: #fff; }
+/* backup / share / import toolbar in the records head, and the tag on an imported record */
+.rectools { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.rectools .btn { font-size: 11px; padding: 3px 9px; letter-spacing: .12em; }
+.rectools em { font: 600 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .12em; color: var(--dim); font-style: normal; margin-left: 6px; }
+.rec.foreign { border-left-style: dashed; }
+.recfrom { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 700 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .14em; }
+.recfrom b { color: var(--cyan); }
+.recfrom i { font-style: normal; padding: 2px 6px; border: 1px solid var(--edge); color: var(--dim); }
+.recfrom i.ok { color: var(--green); border-color: var(--green); } .recfrom i.bad { color: #fff; background: var(--red); border-color: var(--red); }
+.recfrom i.warn { color: var(--amber); border-color: var(--amber); }
+.recheck { background: transparent; border: 1px solid var(--edge); color: var(--dim); height: 18px; padding: 0 6px; cursor: pointer; font: 700 9px/1 "Barlow Condensed", sans-serif; letter-spacing: .14em; }
+.recheck:hover { color: var(--hud2); border-color: var(--hud2); }
+.aboutbox p.ok { color: var(--green); } .aboutbox p.bad { color: #ff8a7a; } .aboutbox p.warn { color: var(--amber); }
+.aboutbox code { font-family: "Barlow Condensed", monospace; letter-spacing: .1em; color: #eef2f7; }
+.aboutrow .btn.armed { background: var(--red); border-color: var(--red); color: #fff; }
 .recdel { position: absolute; right: 8px; top: 8px; background: transparent; border: 1px solid var(--edge); color: var(--dim); width: 22px; height: 22px; cursor: pointer; font-size: 11px; }
 .recdel:hover { color: var(--red); border-color: var(--red); }
 .recdel.armed, .mmreset.armed { width: auto; padding: 0 8px; color: #fff; background: var(--red); border-color: var(--red); font: 700 10px/1 "Barlow Condensed", sans-serif; letter-spacing: .14em; }

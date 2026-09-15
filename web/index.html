@@ -50,7 +50,15 @@
         </div>
       </section>
       <section id="recordsView" class="view" hidden>
-        <div class="teamhead me"><h3>MATCH RECORDS</h3><span id="recCount"></span></div>
+        <div class="teamhead me"><h3>MATCH RECORDS</h3><span id="recCount"></span>
+          <span class="rectools">
+            <button id="recFilter" class="btn ghost" title="show only your own records, or the imported ones too" hidden>ALL</button>
+            <a id="recBackup" class="btn ghost" href="/api/vault/export?key=1" download title="a zip of your records, their end screens, your reset dates and your signing key: keep it somewhere safe; IMPORT it on a fresh install">BACKUP</a>
+            <a id="recShare" class="btn ghost" href="/api/vault/export?key=0" download title="a signed zip of your records for someone else: they import it as yours, read-only, and can check it was not modified">SHARE</a>
+            <button id="recImport" class="btn ghost" title="a backup of yours (restores everything) or a friend's share bundle (their records, tagged and picture-checked)">IMPORT</button>
+            <input type="file" id="recFile" accept=".zip,application/zip" hidden>
+            <em id="recKey" title="your signing key's fingerprint: give it to friends so they can tell your bundles from a forgery"></em>
+          </span></div>
         <div class="records" id="records"></div>
       </section>
       <section id="board" class="view" hidden>
@@ -74,6 +82,13 @@
     <h2>LANCE<i>DECK</i> <small>STOPPED</small></h2>
     <p>The helper reading your screen has been stopped and the tray icon is gone. Nothing runs in the background any more.</p>
     <p>You can close this tab. To play with LanceDeck again, start <b>LanceDeck.exe</b>.</p>
+  </div>
+</div>
+<div id="vault" class="about" hidden>
+  <div class="aboutbox">
+    <h2>IMPORT <i>RECORDS</i> <small id="vaultFile"></small></h2>
+    <div id="vaultBody"></div>
+    <div class="aboutrow" id="vaultRow"></div>
   </div>
 </div>
 <div id="about" class="about" hidden>
