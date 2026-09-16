@@ -39,7 +39,7 @@ from .roster import Roster
 from . import vault
 
 from . import paths
-from .paths import ROOT, WEB, RECORDS, ASSETS, CFG_PATH, CFG_DEFAULT, APP, VERSION
+from .paths import ROOT, WEB, RECORDS, ASSETS, CFG_PATH, CFG_DEFAULT, APP, VERSION, RELEASES_URL, LATEST_API
 HERE = os.path.dirname(os.path.abspath(__file__))
 paths.ensure_dirs()
 if not os.path.exists(CFG_PATH):
@@ -488,6 +488,40 @@ async def quit_app():
     return {"ok": True, "bye": True}
 
 
+def _version_tuple(s: str) -> tuple:
+    """'v0.9.10' -> (0, 9, 10); anything unparseable -> () so it never counts as newer."""
+    m = re.search(r"(\d+(?:\.\d+)*)", s or "")
+    return tuple(int(p) for p in m.group(1).split(".")) if m else ()
+
+
+@app.get("/api/update")
+def update_check():
+    """Ask GitHub for the latest published release. Called ONLY when the player clicks
+    CHECK FOR UPDATES in the About box: the app makes no network call on its own (see the
+    privacy policy in README). Returns what to show, never raises: an unreachable GitHub is a
+    plain 'error' string."""
+    import urllib.request
+    import urllib.error
+    out = {"current": VERSION, "latest": "", "url": RELEASES_URL, "newer": False,
+           "published": "", "error": ""}
+    try:
+        req = urllib.request.Request(LATEST_API, headers={
+            "User-Agent": f"{APP}/{VERSION}", "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            rel = json.loads(r.read().decode("utf-8"))
+        tag = str(rel.get("tag_name") or "")
+        out["latest"] = tag.lstrip("vV")
+        out["url"] = rel.get("html_url") or RELEASES_URL
+        out["published"] = str(rel.get("published_at") or "")[:10]
+        out["newer"] = _version_tuple(tag) > _version_tuple(VERSION)
+    except urllib.error.HTTPError as e:
+        out["error"] = f"GitHub answered {e.code}"
+    except Exception as e:  # no network, DNS, timeout, bad JSON
+        out["error"] = "could not reach GitHub"
+        out["detail"] = str(e)[:120]
+    return out
+
+
 @app.get("/api/records")
 def records():
     """Every match's final screen, newest first: the roster as read plus the screenshot's name."""
@@ -789,7 +823,7 @@ async def _no_stale_static(request, call_next):
     """Browsers must revalidate the page's files on every load, so a fix shows up at once.
     While the service is still loading, the API answers 503 instead of crashing on it."""
     p = request.url.path
-    if svc is None and p.startswith("/api/") and not p.startswith(("/api/state", "/api/setup/")):
+    if svc is None and p.startswith("/api/") and not p.startswith(("/api/state", "/api/setup/", "/api/update", "/api/quit")):
         return JSONResponse({"error": "starting", "note": _starting_state()["note"]}, status_code=503)
     resp = await call_next(request)
     if request.url.path.startswith(("/static/", "/records/")) or request.url.path in ("/", "/setup", "/calib"):

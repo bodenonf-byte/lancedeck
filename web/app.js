@@ -604,6 +604,28 @@ document.getElementById("liveBtn").onclick = async () => {
 document.getElementById("aboutBtn").onclick = () => { document.getElementById("about").hidden = false; };
 document.getElementById("aboutClose").onclick = () => { document.getElementById("about").hidden = true; };
 document.getElementById("about").addEventListener("click", e => { if (e.target.id === "about") e.target.hidden = true; });
+// CHECK FOR UPDATES: the helper asks GitHub for the latest release, only on this click
+document.getElementById("updateBtn").onclick = async e => {
+  const btn = e.currentTarget, line = document.getElementById("updateLine");
+  btn.disabled = true; btn.textContent = "CHECKING…";
+  line.className = "update"; line.textContent = "Asking GitHub for the latest release…";
+  let r = null;
+  try { r = await (await fetch("/api/update")).json(); } catch (err) { r = {error: "the helper did not answer"}; }
+  btn.disabled = false; btn.textContent = "CHECK FOR UPDATES";
+  line.textContent = "";
+  if (r.error) {
+    line.className = "update warn";
+    line.append(`Could not check: ${r.error}. `);
+    const a = document.createElement("a"); a.href = r.url || "https://github.com/bodenonf-byte/lancedeck/releases"; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Open the releases page"; line.append(a, ".");
+  } else if (r.newer) {
+    line.className = "update new";
+    line.append(`LanceDeck ${r.latest} is out (${r.published}), you run ${r.current}. `);
+    const a = document.createElement("a"); a.href = r.url; a.target = "_blank"; a.rel = "noopener"; a.className = "btn"; a.textContent = `GET ${r.latest}`; line.append(a);
+  } else {
+    line.className = "update ok";
+    line.textContent = `You run the latest release, ${r.current}` + (r.latest && r.latest !== r.current ? ` (published: ${r.latest}).` : ".");
+  }
+};
 // QUIT: stops the helper itself (tray icon included), for players done for the night
 let stopped = false;
 document.getElementById("quitBtn").onclick = async e => {

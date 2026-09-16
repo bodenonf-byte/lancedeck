@@ -126,8 +126,9 @@ Free code signing provided by [SignPath.io](https://signpath.io), certificate by
 
 Privacy policy: this program will not transfer any information to other networked systems
 unless specifically requested by the user or the person installing or operating it. It reads
-the game window on the local machine and serves a page to the local browser; it makes no other
-network connections.
+the game window on the local machine and serves a page to the local browser; the one other
+network connection it can make is the update check (a single request to the GitHub releases
+API), and only when the user presses CHECK FOR UPDATES in the About box.
 
 ## Licence
 

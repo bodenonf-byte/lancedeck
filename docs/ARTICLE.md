@@ -50,9 +50,9 @@ All of it:
   reader, in a `samples` folder;
 - a log of what it read.
 
-There is no account, no upload, no telemetry, no update check. If you delete the folder, it is
-gone. The program never opens a network connection except to serve the page to your own
-browser.
+There is no account, no upload, no telemetry, no automatic update check. If you delete the
+folder, it is gone. The program never opens a network connection except to serve the page to
+your own browser, and one request to GitHub when you press CHECK FOR UPDATES in the About box.
 
 The mech pictures and the map backgrounds are yours too: on first run, LanceDeck copies the mech
 icons and the loading-screen art out of the game files already installed on your PC. They are

@@ -498,6 +498,7 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .recheck { background: transparent; border: 1px solid var(--edge); color: var(--dim); height: 18px; padding: 0 6px; cursor: pointer; font: 700 9px/1 "Barlow Condensed", sans-serif; letter-spacing: .14em; }
 .recheck:hover { color: var(--hud2); border-color: var(--hud2); }
 .aboutbox p.ok { color: var(--green); } .aboutbox p.bad { color: #ff8a7a; } .aboutbox p.warn { color: var(--amber); }
+.aboutbox p.update.new { color: #eef2f7; } .aboutbox p.update .btn { display: inline-block; margin-left: 8px; padding: 3px 10px; font-size: 12px; }
 .aboutbox code { font-family: "Barlow Condensed", monospace; letter-spacing: .1em; color: #eef2f7; }
 .aboutrow .btn.armed { background: var(--red); border-color: var(--red); color: #fff; }
 .recdel { position: absolute; right: 8px; top: 8px; background: transparent; border: 1px solid var(--edge); color: var(--dim); width: 22px; height: 22px; cursor: pointer; font-size: 11px; }

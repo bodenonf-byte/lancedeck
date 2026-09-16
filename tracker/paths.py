@@ -9,6 +9,9 @@ import sys
 
 APP = "LanceDeck"
 VERSION = "0.9.4"
+REPO = "bodenonf-byte/lancedeck"                       # GitHub repository (owner/name)
+RELEASES_URL = f"https://github.com/{REPO}/releases"   # where a newer build lives
+LATEST_API = f"https://api.github.com/repos/{REPO}/releases/latest"
 FROZEN = bool(getattr(sys, "frozen", False))
 if FROZEN:
     ROOT = os.path.dirname(os.path.abspath(sys.executable))
