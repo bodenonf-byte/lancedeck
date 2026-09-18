@@ -26,7 +26,7 @@ jobs:
       - name: Build
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --name LanceDeck --onedir --windowed `
+          python -m PyInstaller --noconfirm --clean --name LanceDeck --onedir --windowed --icon web/lancedeck.ico `
             --add-data "web;web" --add-data "data;data" --add-data "tools;tools" --add-data "tracker\config.default.json;tracker" `
             --collect-all rapidocr_onnxruntime --collect-all onnxruntime --collect-all dxcam `
             --hidden-import pystray._win32 --hidden-import tracker.server --hidden-import tracker.paths --hidden-import tools.import_game_icons --hidden-import tools.import_game_maps --hidden-import tools.cut_mech_icons `

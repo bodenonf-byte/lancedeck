@@ -13,7 +13,7 @@ import time
 import webbrowser
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tracker.paths import CFG_PATH, CFG_DEFAULT, ROOT, APP, VERSION, ensure_dirs
+from tracker.paths import CFG_PATH, CFG_DEFAULT, ROOT, WEB, APP, VERSION, ensure_dirs
 
 
 def _port_in_use(port: int) -> bool:
@@ -35,8 +35,13 @@ def open_page(url: str) -> None:
 
 
 def _icon_image():
-    """The tray icon: an amber L on a dark hex, drawn here so no file is needed."""
+    """The tray icon: the app icon (web/lancedeck.png, same as the exe), or a drawn
+    fallback — an amber L on a dark hex — if the file is missing."""
     from PIL import Image, ImageDraw
+    try:
+        return Image.open(os.path.join(WEB, "lancedeck.png")).convert("RGBA")
+    except Exception:
+        pass
     im = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     d.polygon([(32, 2), (60, 17), (60, 47), (32, 62), (4, 47), (4, 17)], fill=(14, 19, 26, 255), outline=(255, 179, 71, 255), width=3)

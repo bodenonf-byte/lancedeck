@@ -20,6 +20,11 @@ unanswered, so the repo has no signing secrets yet.
   latest", or "could not reach GitHub". README privacy policy and the article name this
   single on-demand request.
 
+- App icon (2026-09-18): `tools/make_icon.py` draws `web/lancedeck.ico` + `.png` (dark hex
+  plate, amber edge, a lance of four mechs in formation); `--icon` in `build/build.ps1` and
+  `release.yml`, the tray uses the same picture, the pages link it as favicon. The released
+  0.9.4 exe still shows PyInstaller's default icon.
+
 **Field test of 0.9.4:** one match on 2026-09-16 on the released exe; the record saved
 cleanly, the end table read all twelve enemy rows with mech, damage and score, no capture
 hang.
