@@ -114,8 +114,9 @@ Download the zip, unpack it, run `LanceDeck.exe`. It sits in the system tray and
 opens in your browser: type your pilot name, confirm the game folder, click import. A few minutes later, while it cuts the
 mechs out of their hangar backdrops, you are ready to drop.
 
-LanceDeck is free. If it helps you win, there is a Support button in the app. Donations pay for
-the time it takes to keep the reader working through the game's patches.
+LanceDeck is free. If it helps you win, there is a Support button in the app (it opens
+<https://ko-fi.com/johnson_b>). Donations pay for the time it takes to keep the reader working
+through the game's patches.
 
 *LanceDeck is not affiliated with or endorsed by Piranha Games Inc. MechWarrior and BattleTech
 are trademarks of their respective owners.*

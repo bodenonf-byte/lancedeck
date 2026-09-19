@@ -102,7 +102,7 @@ cost frames).
 ## Support
 
 The app is free. If it helps you win, a donation keeps it maintained through the game's
-patches: the **Support** button in the app, or the Sponsor button on this repository.
+patches: the **Support** button in the app, or directly at <https://ko-fi.com/johnson_b>.
 
 ## From source
 

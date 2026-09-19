@@ -50,6 +50,10 @@ class Service:
     def __init__(self):
         with open(CFG_PATH, encoding="utf-8") as f:
             self.cfg = json.load(f)
+        # the support link moved to Ko-fi (2026-09-20): a config.json carried over from an
+        # older install still holds the old default, so treat that value as "unset"
+        if self.cfg.get("donate_url", "") in ("", "https://github.com/sponsors/bodenonf-byte"):
+            self.cfg["donate_url"] = "https://ko-fi.com/johnson_b"
         self.db = MechDB()
         dml = bool(self.cfg.get("ocr_dml", False))
         try:                                            # stay out of the game's way: below-normal priority

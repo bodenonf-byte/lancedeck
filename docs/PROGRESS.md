@@ -10,6 +10,11 @@ unanswered, so the repo has no signing secrets yet.
 
 **On `main`, unreleased (goes into 0.9.5):**
 
+- Support link (2026-09-20): the SUPPORT button and the About box now open Ko-fi
+  (<https://ko-fi.com/johnson_b>) instead of GitHub Sponsors; `config.default.json`, README
+  and the article updated. A `config.json` carried over from an older install that still
+  holds the old Sponsors URL is treated as unset and gets the Ko-fi link at load time.
+
 - Records vault (28c3ba5): BACKUP / SHARE / IMPORT as signed zip bundles
   (`tracker/vault.py`, Ed25519 via `cryptography`, SHA-256 per file). Imported records are
   read-only, tagged with the owner's name and key fingerprint, never counted on MY MECHS, and
