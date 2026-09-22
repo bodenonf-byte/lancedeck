@@ -46,6 +46,13 @@ unanswered, so the repo has no signing secrets yet.
   one (the end table is ~2.3 s); both loops throttle to 1/s and 1 per 4 s when nothing match-like
   was read for 30 s (`Service.BUSY_FOR`, `IDLE_FPS`, `IDLE_FULL_EVERY`, `stats.pace`). Live from
   source with the game in the menus: 1.8 cores (5.7 %). **Not yet seen in a real match.**
+- Dev build for the CPU check: `Downloads\LanceDeck-v0.9.5-dev-win64` (built 2026-09-22 from
+  clean main 64449d1, config/records/assets copied from the 0.9.4 folder, `fps` 2). Game in the
+  menus: 2.7 cores (8 %). Once a match confirms the number, 0.9.5 can ship.
+- **Uncommitted in the working tree since 2026-09-20:** a caster / competitive-spectator mode
+  (`tracker/spectate.py`, `tracker/weapons.py`, `data/weapons.json`, changes in `web/app.js`,
+  `web/style.css`, `web/index.html`, and a `_apply_comp` path in `tracker/server.py`). Not in
+  any commit; not described anywhere else yet. Finish or shelve it before tagging 0.9.5.
 - App icon (2026-09-18): `tools/make_icon.py` draws `web/lancedeck.ico` + `.png` (dark hex
   plate, amber edge, a lance of four mechs in formation); `--icon` in `build/build.ps1` and
   `release.yml`, the tray uses the same picture, the pages link it as favicon. The released
