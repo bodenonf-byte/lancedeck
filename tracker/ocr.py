@@ -14,6 +14,30 @@ from PIL import Image
 logging.getLogger("OrtInferSession").setLevel(logging.WARNING)
 
 
+def _quiet_sessions():
+    """ONNX Runtime's worker threads busy-spin between operators by default, on every
+    session (RapidOCR opens three per engine, this app runs three engines): measured on the
+    dev PC, 10.3 cores busy during a match against 3.7 with spinning off, for the same OCR
+    latency.  RapidOCR builds its SessionOptions itself, so the class it sees is replaced
+    with one that turns spinning off."""
+    try:
+        import onnxruntime as ort
+        from rapidocr_onnxruntime.utils import infer_engine
+
+        class QuietSessionOptions(ort.SessionOptions):
+            def __init__(self):
+                super().__init__()
+                self.add_session_config_entry("session.intra_op.allow_spinning", "0")
+                self.add_session_config_entry("session.inter_op.allow_spinning", "0")
+
+        infer_engine.SessionOptions = QuietSessionOptions
+    except Exception:
+        pass
+
+
+_quiet_sessions()
+
+
 @dataclass
 class Line:
     text: str

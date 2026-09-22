@@ -3,7 +3,7 @@
   "my_name": "",
   "port": 8765,
   "monitor": 1,
-  "fps": 3,
+  "fps": 2,
   "full_every": 2.0,
   "panel_region": [
     0,

@@ -70,6 +70,14 @@ screen a couple of seconds at the end so the record is written.
   survival, out of your records.
 - **Records**: every match's final screen, results and medal winners, with the board of that
   match; the last five games also remember which pilot drove which mech.
+- **Competitive**: for casters and viewers of a competitive match watched from the spectator
+  client. Both teams as the caster's side tables show them, live: health bar, pilot, mech, kills
+  and assists, with the series score, the match score, the clock and the capture points on
+  top. When the caster highlights a pilot, that pilot's weapons are read off the highlight box
+  and stay on their card, summed into alpha damage, heat per alpha, sustained DPS, a
+  damage-weighted optimal range and its band (brawl / mid / long), and the count of energy,
+  ballistic, missile and support weapons; the team header adds up the loadouts read so far.
+  Weapon figures come from `data/weapons.json`, approximate and yours to edit.
 - **Backup, share, import** (in Records): BACKUP writes a zip of your records, their end screens,
   your per-mech reset dates and your signing key; IMPORT it on a fresh install and everything is
   back, as you. SHARE writes the same without the key: a friend imports it and sees your records
@@ -90,14 +98,20 @@ runner from this public source, so anyone can check that the download matches th
 The pipeline, in order: `tracker/capture.py` finds the game window and grabs frames,
 `tracker/ocr.py` reads the text, `tracker/match.py` turns the lines into a scoreboard, lance
 panel, Q overlay, target readout or results screen, `tracker/roster.py` keeps the two teams
-consistent across reads, `tracker/server.py` serves the page and writes the records, and
+consistent across reads, `tracker/spectate.py` reads the caster's client instead when that is
+what is on screen (with `tracker/weapons.py` summing the loadouts), `tracker/server.py` serves the page and writes the records, and
 `web/` is the page.
 
 ## Performance
 
-Runs in quiet mode by default: OCR on the CPU on four threads at a low priority so the GPU
-stays with the game. `ocr_dml: true` in `config.json` moves OCR to the GPU (faster, but it can
-cost frames).
+Runs in quiet mode by default: OCR on the CPU at a low priority so the GPU stays with the
+game. During a match the lance panel is read twice a second and the whole frame every two
+seconds (`fps` and `full_every` in `config.json`); in the MechLab or the lobby, when nothing
+match-like has been read for half a minute, both drop to once a second and once every four
+seconds until the drop screen or the HUD shows up. With nothing to read (game closed, or on
+another window in exclusive fullscreen) it idles at zero. On a 32-core PC a match costs about
+three cores; the OCR engine's worker threads no longer busy-wait between operations, which
+used to triple that. `ocr_dml: true` moves OCR to the GPU (faster, but it can cost frames).
 
 ## Support
 
