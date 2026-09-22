@@ -36,7 +36,6 @@ from .match import build, TeamState
 from .mechdb import MechDB
 from .ocr import Reader, Line
 from .roster import Roster
-from . import spectate
 from . import vault
 
 from . import paths
@@ -87,7 +86,6 @@ class Service:
                       "screen": list(self.grabber.size()), "target": self.grabber.describe()}
         self.roster = Roster()
         self.roster.memory = load_memory()
-        self.comp = spectate.CompRoster()          # the caster's view of a competitive match, when that is what is on screen
         self.grabber.window_mode = self.cfg.get("capture", "window") != "screen"
         self.assets_v = 0              # bumps when a picture is harvested, so the page refetches the list
         self._map_since = 0.0; self._map_seen = ""
@@ -141,32 +139,11 @@ class Service:
         t0 = time.time()
         with self.ocr_lock:
             lines = self.reader.read(img, float(self.cfg.get("ocr_scale", 1.0)))
-        if self._apply_comp(lines, img):
-            # the caster's tables are not a drop screen: the ordinary roster keeps what it had
-            with self.lock:
-                self.last_frame = img; self.last_lines = lines
-                self.stats["frames"] += 1; self.stats["ocr_ms"] = round((time.time() - t0) * 1000); self.stats["last_kind"] = "caster"
-            return self.state
         raw = build(lines, img, self.db, self.cfg, source)
         if source == "live":
             self._sample(img, lines, raw)
             self._harvest(img, lines, raw)
         return self._apply(raw, img, lines, True, round((time.time() - t0) * 1000))
-
-    def _apply_comp(self, lines: list[Line], img: Image.Image) -> bool:
-        """The same OCR lines read as the caster's client.  True when the frame was the caster's
-        two tables (a highlight box alone folds in but leaves the frame to the ordinary reader)."""
-        try:
-            fr = spectate.build(lines, img, self.db)
-        except Exception as e:
-            self.stats["last_error"] = "comp: " + repr(e)[:160]; return False
-        if fr.kind == "none":
-            return False
-        with self.lock:
-            if self.comp.merge(fr):
-                self.version += 1
-            self.stats["last_comp"] = fr.kind
-        return fr.kind == "comp"
 
     def _harvest(self, img, lines, raw):
         """Pictures from the player's own screen: mech portraits off the MechLab home screen,
@@ -247,14 +224,14 @@ class Service:
 
     def reset(self):
         with self.lock:
-            self.roster.clear(); self.comp.clear(); self.version += 1
+            self.roster.clear(); self.version += 1
             self.state = TeamState("none", [], [], "reset", time.time(), 0, 0, "roster cleared")
 
-    # Pace.  While a match is on (a HUD, scoreboard, target or caster read within BUSY_FOR
-    # seconds) both loops run at the configured rate.  The rest of the time — the MechLab, the
-    # lobby, the store, most of the hours the game is open — nothing on screen is worth
-    # reading at that rate, so the panel loop drops to IDLE_FPS and the full loop to
-    # IDLE_FULL_EVERY.  The first drop-screen or HUD read brings the full rate back at once.
+    # Pace.  While a match is on (a HUD, scoreboard or target read within BUSY_FOR seconds)
+    # both loops run at the configured rate.  The rest of the time — the MechLab, the lobby,
+    # the store, most of the hours the game is open — nothing on screen is worth reading at
+    # that rate, so the panel loop drops to IDLE_FPS and the full loop to IDLE_FULL_EVERY.
+    # The first drop-screen or HUD read brings the full rate back at once.
     BUSY_FOR = 30.0
     IDLE_FPS = 1.0
     IDLE_FULL_EVERY = 4.0
@@ -329,15 +306,13 @@ class Service:
         self.stats["target"] = self.grabber.describe(); self.stats["screen"] = list(self.grabber.size())
         if self.state is None:
             return {"kind": "none", "mine": [], "enemy": [], "source": "none", "ts": 0, "note": "no frame yet", "map": "",
-                    "version": self.version, "stats": self.stats, "live": self.live, "my_name": self.cfg.get("my_name", ""),
-                    "comp": self.comp.as_dict()}
+                    "version": self.version, "stats": self.stats, "live": self.live, "my_name": self.cfg.get("my_name", "")}
         d = self.state.as_dict(); d["version"] = self.version; d["stats"] = self.stats; d["live"] = self.live
         d["result"] = getattr(self.state, "result", ""); d["mode"] = getattr(self.state, "mode", "")
         d["frozen"] = getattr(self.state, "frozen", False)
         d["my_name"] = self.cfg.get("my_name", ""); d["assets_v"] = self.assets_v
         d["donate_url"] = self.cfg.get("donate_url", ""); d["app"] = APP; d["app_version"] = VERSION
         d["records_v"] = getattr(self, "records_v", 0)
-        d["comp"] = self.comp.as_dict()
         return d
 
 
