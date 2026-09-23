@@ -2,6 +2,37 @@
 
 Kept up to date at the end of each working session. Newest first.
 
+## State on 2026-09-23
+
+**CPU, second pass (measured on the dev PC, 32 cores, a live match on the 0.9.5-dev build).**
+The 2026-09-22 fix works — ONNX spin-wait off is worth 4 cores per read (a full frame reads
+in 1.8 s at 4.2 cores busy instead of 1.9 s at 7.2, the lance-panel corner in 0.15 s at 3.0
+instead of 0.14 s at 7.2). What was left, at 5.3 cores in a match:
+
+- `SetPriorityClass` **never worked**: `ctypes.windll.kernel32.GetCurrentProcess()` with no
+  `restype` hands the pseudo-handle over as a 32-bit int, so the call returned 0 with
+  ERROR_INVALID_HANDLE and the helper ran at Normal priority against the game, from the day
+  the line was written. With `GetCurrentProcess.restype = c_void_p` and
+  `SetPriorityClass.argtypes` it returns 1 and the process reads BelowNormal / base 6. It
+  says so on the console when it fails now, instead of passing in silence. Verified on the rebuilt dev exe: it comes
+  up BelowNormal / base 6 on its own, and sits at 0.39 cores (1.2 %) with the game in the
+  menus. The in-match figure still has to be taken on a real match.
+- The panel loop never rested. The 2026-09-22 commit gave the full loop "rest at least half
+  the read" and left the panel loop on `sleep(dt - elapsed)`: a tick costs the panel corner
+  (~0.2 s) plus, on alternate ticks, the target panel (~0.5 s) against a 0.5 s interval at
+  `fps` 2, so it ran back to back all match with four OCR threads pinned — and its Python
+  half fought the full loop for the GIL (the same corner that reads in 0.2 s alone was
+  taking 0.45-0.64 s live). Same rule as the full loop now.
+
+**Where the rest of the CPU goes, if it has to come down further** (measured, not guessed):
+the full 3440x1440 read is 0.25/s x 7.5 core-seconds = 1.9 cores, the panel and target reads
+about 1.5, and the remainder is capture, conversion and matching. Inside a full read,
+DETECTION is only 0.45 s — 3.0 s is recognising the 118 boxes found, so a smaller
+`det_limit_side_len` buys nothing (1280 and 960 read the same 89 texts no faster). The two
+levers left both cost a feature: skip the target-panel OCR when no target is up (~0.8 cores,
+needs a cheap "is the panel drawn" test), and read the full frame less often while the HUD
+is on screen (risks missing a quick TAB or Q peek).
+
 ## State on 2026-09-17
 
 **Released:** v0.9.4 (2026-09-15) — build-guide link fix, QUIT button, faster and safer
@@ -38,6 +69,17 @@ unanswered, so the repo has no signing secrets yet.
   latest", or "could not reach GitHub". README privacy policy and the article name this
   single on-demand request.
 
+- Mech cut-outs (2026-09-23): a Corsair showed as an empty pad. GrabCut seeds its colour model
+  with k-means from OpenCV's global RNG, so the same icon cut differently on every run — six runs
+  of COR-7A gave two usable cut-outs and four refusals, and the shipped one was a 26 %-opaque
+  fragment. `tools/cut_mech_icons.py` now fixes the seed per attempt, measures each result against
+  the icon's own difference from the backdrop (recall of the certain mech, rejection of the certain
+  hangar), retries other seeds, and never writes a cut that fails the bar — with no cut-out the page
+  falls back to the plain icon, which always shows the mech. `--repair` re-cuts poor cut-outs that
+  already exist and moves the hopeless ones to `cut/rejected/`; `--dir` points it at a packaged
+  build's assets. Good cuts measure recall 0.70-0.95, broken ones under 0.45, so the bar sits at
+  0.55 in the gap: 11 of 1406 failed, 7 re-cut clean (COR-7A 0.40 -> 0.92), 4 fall back to the icon.
+  Repaired in the source folder and in both Downloads builds.
 - CPU use (2026-09-22): the user saw LanceDeck.exe at 36 % of 32 cores during play. Measured on
   a real frame: 10.3 cores busy, of which two thirds were ONNX Runtime worker threads
   busy-spinning between operators (`allow_spinning` is on by default, three sessions per engine,
