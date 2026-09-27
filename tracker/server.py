@@ -87,6 +87,7 @@ class Service:
                       "last_kind": "none", "ocr": self.reader.backend, "capture": self.grabber.backend,
                       "screen": list(self.grabber.size()), "target": self.grabber.describe()}
         self._still_sig: dict[str, tuple] = {}
+        self._full_quiet = 0
         self.roster = Roster()
         self.roster.memory = load_memory()
         self.grabber.window_mode = self.cfg.get("capture", "window") != "screen"
@@ -236,24 +237,28 @@ class Service:
     # that rate, so the panel loop drops to IDLE_FPS and the full loop to IDLE_FULL_EVERY.
     # The first drop-screen or HUD read brings the full rate back at once.
     BUSY_FOR = 30.0
-    IDLE_FPS = 0.5
+    IDLE_FPS = 0.25
     IDLE_FULL_EVERY = 4.0
-    # Once both sides are known (12 a side, every mech read) the full frame has almost nothing
-    # left to learn until the results are up, so it is read less often.  Measured on this PC
-    # during a match: the whole frame costs ~4.1 CPU seconds a read, the lance panel ~0.6 and
-    # the target readout ~0.4, which at the old rates came to about 4.7 cores.
-    SETTLED_FULL_EVERY = 5.0
+    # Measured on this PC during a match (turning each loop off in turn): the whole frame
+    # costs ~6.6 CPU seconds a read, the lance panel ~1.3, the target readout ~1.0.  Both
+    # loops were SATURATED — a read took about as long as the interval, so they ran back to
+    # back and the configured rate throttled nothing.  The intervals below are longer than a
+    # read, so they now do what they say.
+    FULL_BACKOFF_AFTER = 3           # full reads that taught us nothing before easing off
+    FULL_EVERY_MAX = 8.0             # ...but never slower than this: the results screen
     TARGET_EVERY = 4                 # panel ticks between target-readout reads
     STILL_TOL = 2                    # a screen that has not moved a pixel...
     STILL_FOR = 10.0                 # ...is read again at least this often anyway
 
-    def _settled(self) -> bool:
-        """Both teams complete, every mech known: nothing new is coming off the HUD."""
+    def _known(self) -> tuple:
+        """What the full frame is there to find out.  Health is left out on purpose: it
+        changes every second and comes off the lance panel anyway."""
         st = self.state
-        if st is None or st.kind == "none":
-            return False
+        if st is None:
+            return ()
         both = st.mine + st.enemy
-        return len(st.mine) >= 12 and len(st.enemy) >= 12 and all(s.code for s in both)
+        return (st.kind, st.map or "", len(st.mine), len(st.enemy),
+                sum(1 for x in both if x.code), sum(1 for x in both if not x.alive))
 
     def _still(self, key: str, img: Image.Image, force_after: float) -> bool:
         """True when this picture is the one already read — a results screen left on the
@@ -284,14 +289,19 @@ class Service:
             try:
                 img = self.grabber.grab()
                 if img is not None and not self._still("full", img, self.STILL_FOR):
+                    before = self._known()
                     self.analyse(img, "live")
+                    # a read that changed nothing we care about buys the next one more time
+                    self._full_quiet = 0 if self._known() != before else self._full_quiet + 1
             except Exception as e:
                 self.stats["last_error"] = "full: " + repr(e)[:160]
             every = max(0.3, float(self.cfg.get("full_every", 1.0)))
             if self._idle():
                 every = max(every, self.IDLE_FULL_EVERY)
-            elif self._settled():
-                every = max(every, float(self.cfg.get("full_every_settled", self.SETTLED_FULL_EVERY)))
+            elif self._full_quiet >= self.FULL_BACKOFF_AFTER:
+                slower = 1 + (self._full_quiet - self.FULL_BACKOFF_AFTER) // 2
+                every = min(float(self.cfg.get("full_every_max", self.FULL_EVERY_MAX)), every * (1 + slower))
+            self.stats["full_every"] = round(every, 1)
             took = time.time() - t0
             # a dense screen (the end table: ~2.3 s on the CPU) outlasts the interval; without
             # a rest the loop reads it back to back at six cores.  Rest at least half the read.

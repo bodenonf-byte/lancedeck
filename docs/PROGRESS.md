@@ -69,6 +69,16 @@ unanswered, so the repo has no signing secrets yet.
   latest", or "could not reach GitHub". README privacy policy and the article name this
   single on-demand request.
 
+- CPU, second pass (2026-09-27, same day): the first pass changed nothing measurable, because
+  BOTH LOOPS WERE SATURATED — a lance-panel read takes ~0.55 s and a full-frame read ~1.8 s, so
+  at the old intervals they ran back to back and `fps` never throttled anything. `_settled` never
+  fired either: enemy mechs are exactly what is still unknown mid-match (1 of 12 enemies had a
+  code). Attributed live by turning each loop off in turn through /api/config: full frame 2.44
+  cores, panel + target 2.5, everything else ~0.3. Now `fps` 0.5 (a panel read every 2 s, longer
+  than the read), the target readout every 4th tick, and the full frame backs off 2 -> 4 -> 6 -> 8 s
+  while it learns nothing new (`_known()`: kind, map, roster size, mechs identified, deaths — not
+  health), snapping back to 2 s the moment anything changes, so a results screen is never more
+  than 8 s away.
 - CPU audit (2026-09-27): LanceDeck.exe sat at 20 % of 32 cores in a match. Profiled with
   py-spy and measured per read on frames taken from the live match: the whole frame costs
   ~4.1 CPU seconds a read (64 text boxes), the lance panel ~0.6 and the target readout ~0.4,
