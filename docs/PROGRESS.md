@@ -69,6 +69,19 @@ unanswered, so the repo has no signing secrets yet.
   latest", or "could not reach GitHub". README privacy policy and the article name this
   single on-demand request.
 
+- CPU audit (2026-09-27): LanceDeck.exe sat at 20 % of 32 cores in a match. Profiled with
+  py-spy and measured per read on frames taken from the live match: the whole frame costs
+  ~4.1 CPU seconds a read (64 text boxes), the lance panel ~0.6 and the target readout ~0.4,
+  which at the old rates (panel twice a second, target once, full frame every 2.7 s) models to
+  4.7 cores — exactly what the process used. 86 % of the time is inside ONNX inference and
+  recognition scales with the number of text boxes, so the only real lever is how often we read.
+  Now: `fps` 2 -> 1, the target readout every 4th panel tick instead of every 2nd,
+  `full_every_settled` (5 s) once both sides are complete with every mech known, and a
+  still-screen test that skips OCR on a picture identical to the last one (a results screen left
+  on the display used to be re-read every 2 s at ~20 CPU seconds a go). Rejected after measuring:
+  fewer OCR threads (6 threads use less CPU than 2, not more), a smaller detector size, bigger
+  recognition batches (worse: padding), reading only the centre band (loses pilots and the map
+  name), and a brightness test for 'is a table on screen' (HUD and table frames overlap).
 - Mech cut-outs (2026-09-23): a Corsair showed as an empty pad. GrabCut seeds its colour model
   with k-means from OpenCV's global RNG, so the same icon cut differently on every run — six runs
   of COR-7A gave two usable cut-outs and four refusals, and the shipped one was a 26 %-opaque

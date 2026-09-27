@@ -26,6 +26,8 @@ import os
 import threading
 import time
 
+import numpy as np
+
 from fastapi import FastAPI, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import RedirectResponse, FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -84,6 +86,7 @@ class Service:
         self.stats = {"frames": 0, "panel_frames": 0, "ocr_ms": 0, "panel_ms": 0, "last_error": "",
                       "last_kind": "none", "ocr": self.reader.backend, "capture": self.grabber.backend,
                       "screen": list(self.grabber.size()), "target": self.grabber.describe()}
+        self._still_sig: dict[str, tuple] = {}
         self.roster = Roster()
         self.roster.memory = load_memory()
         self.grabber.window_mode = self.cfg.get("capture", "window") != "screen"
@@ -233,8 +236,40 @@ class Service:
     # that rate, so the panel loop drops to IDLE_FPS and the full loop to IDLE_FULL_EVERY.
     # The first drop-screen or HUD read brings the full rate back at once.
     BUSY_FOR = 30.0
-    IDLE_FPS = 1.0
+    IDLE_FPS = 0.5
     IDLE_FULL_EVERY = 4.0
+    # Once both sides are known (12 a side, every mech read) the full frame has almost nothing
+    # left to learn until the results are up, so it is read less often.  Measured on this PC
+    # during a match: the whole frame costs ~4.1 CPU seconds a read, the lance panel ~0.6 and
+    # the target readout ~0.4, which at the old rates came to about 4.7 cores.
+    SETTLED_FULL_EVERY = 5.0
+    TARGET_EVERY = 4                 # panel ticks between target-readout reads
+    STILL_TOL = 2                    # a screen that has not moved a pixel...
+    STILL_FOR = 10.0                 # ...is read again at least this often anyway
+
+    def _settled(self) -> bool:
+        """Both teams complete, every mech known: nothing new is coming off the HUD."""
+        st = self.state
+        if st is None or st.kind == "none":
+            return False
+        both = st.mine + st.enemy
+        return len(st.mine) >= 12 and len(st.enemy) >= 12 and all(s.code for s in both)
+
+    def _still(self, key: str, img: Image.Image, force_after: float) -> bool:
+        """True when this picture is the one already read — a results screen left on the
+        display used to be OCR'd again every two seconds at ~20 CPU seconds a go."""
+        try:
+            sig = np.asarray(img.convert("L").resize((128, 54), Image.BILINEAR), dtype=np.int16)
+        except Exception:
+            return False
+        prev, last = self._still_sig.get(key, (None, 0.0))
+        now = time.time()
+        if prev is not None and prev.shape == sig.shape and now - last < force_after \
+                and int(np.abs(sig - prev).max()) <= self.STILL_TOL:
+            self.stats["skipped"] = self.stats.get("skipped", 0) + 1
+            return True
+        self._still_sig[key] = (sig, now)
+        return False
 
     def _idle(self) -> bool:
         idle = time.time() > getattr(self, "busy_until", 0.0)
@@ -248,13 +283,15 @@ class Service:
             t0 = time.time()
             try:
                 img = self.grabber.grab()
-                if img is not None:
+                if img is not None and not self._still("full", img, self.STILL_FOR):
                     self.analyse(img, "live")
             except Exception as e:
                 self.stats["last_error"] = "full: " + repr(e)[:160]
             every = max(0.3, float(self.cfg.get("full_every", 1.0)))
             if self._idle():
                 every = max(every, self.IDLE_FULL_EVERY)
+            elif self._settled():
+                every = max(every, float(self.cfg.get("full_every_settled", self.SETTLED_FULL_EVERY)))
             took = time.time() - t0
             # a dense screen (the end table: ~2.3 s on the CPU) outlasts the interval; without
             # a rest the loop reads it back to back at six cores.  Rest at least half the read.
@@ -274,9 +311,13 @@ class Service:
                 if frame is not None:
                     W, H = frame.size
                     crop = lambda r: frame.crop((int(r[0] * W), int(r[1] * H), int(r[2] * W), int(r[3] * H)))
-                    self.analyse_panel(crop(region))
-                    if self._tick % 2 == 0:                 # every other tick: the target info panel, top right
-                        self.analyse_target(crop(treg))
+                    pimg = crop(region)
+                    if not self._still("panel", pimg, 3.0):
+                        self.analyse_panel(pimg)
+                    if self._tick % self.TARGET_EVERY == 0:  # the target info panel, top right
+                        timg = crop(treg)
+                        if not self._still("target", timg, 8.0):
+                            self.analyse_target(timg)
             except Exception as e:
                 self.stats["last_error"] = "panel: " + repr(e)[:160]
             dt = 1.0 / max(0.5, float(self.cfg.get("fps", 6)))
