@@ -19,6 +19,11 @@
 <header><div class="brand">LANCE<span>DECK</span> · CALIBRATION</div><div class="status"><span id="stats"></span><a class="btn ghost" href="/">BOARD</a></div></header>
 <div class="wrap">
   <div class="row">
+    Reading <select id="srcPick" style="min-width:340px"></select>
+    <button class="btn ghost" id="srcRefresh">REFRESH LIST</button>
+    <span id="srcNote"></span>
+  </div>
+  <div class="row">
     Pilot name <input id="my_name" class="wide" placeholder="your in-game name">
     Panel fps <input id="fps" type="number" step="1" min="1" max="15">
     Full read every (s) <input id="full_every" type="number" step="0.5" min="0.3" max="10">
@@ -54,6 +59,35 @@ document.getElementById("save").onclick = async () => {
   load();
 };
 document.getElementById("refresh").onclick = load;
+
+// what the reader is aimed at: the game, any window (a caster's stream), or a whole screen
+async function loadSources() {
+  const pick = document.getElementById("srcPick"), note = document.getElementById("srcNote");
+  let d;
+  try { d = await fetch("/api/sources").then(r => r.json()); } catch (e) { note.textContent = "no answer"; return; }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const opt = (v, l, sel) => `<option value="${v}"${sel ? " selected" : ""}>${esc(l)}</option>`;
+  const cur = d.current || "game";
+  let h = opt("game", "MechWarrior Online — the game client", cur === "game");
+  if (d.windows.length) {
+    h += '<optgroup label="a window">';
+    for (const w of d.windows) h += opt(`hwnd:${w.hwnd}`, `${w.title.slice(0, 60)} — ${w.app} (${w.size[0]}×${w.size[1]}, screen ${w.monitor})`, cur === `hwnd:${w.hwnd}`);
+    h += "</optgroup>";
+  }
+  h += '<optgroup label="a whole screen">';
+  for (const m of d.monitors) h += opt(`monitor:${m.index}`, `Screen ${m.index} (${m.size[0]}×${m.size[1]})`, cur === `monitor:${m.index}`);
+  h += "</optgroup>";
+  pick.innerHTML = h;
+  note.textContent = d.found ? "" : "that window is not open";
+  note.style.color = d.found ? "" : "#e35b4c";
+}
+document.getElementById("srcPick").onchange = async e => {
+  await fetch("/api/config", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({source: e.target.value})});
+  setTimeout(() => { loadSources(); load(); }, 600);
+};
+document.getElementById("srcRefresh").onclick = loadSources;
+
+loadSources();
 load(); setInterval(load, 4000);
 </script>
 </body>

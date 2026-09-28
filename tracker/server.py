@@ -91,6 +91,7 @@ class Service:
         self.roster = Roster()
         self.roster.memory = load_memory()
         self.grabber.window_mode = self.cfg.get("capture", "window") != "screen"
+        self.grabber.set_source(self.cfg.get("source", "game"))
         self.assets_v = 0              # bumps when a picture is harvested, so the page refetches the list
         self._map_since = 0.0; self._map_seen = ""
         from .match import set_panel_region
@@ -875,8 +876,33 @@ async def set_config(body: dict):
     svc.cfg.update({k: v for k, v in body.items() if not k.startswith("_")})
     from .match import set_panel_region
     set_panel_region(svc.cfg.get("panel_region"))
+    svc.grabber.window_mode = svc.cfg.get("capture", "window") != "screen"
+    svc.grabber.set_source(svc.cfg.get("source", "game"))
+    svc.stats["target"] = svc.grabber.describe()
     _save_cfg()
     return svc.cfg
+
+
+@app.get("/api/sources")
+def sources():
+    """What the reader can be aimed at: the game, any open window, or a whole screen.
+
+    A match watched from a caster is a stream in a browser or a spectator client, not the
+    game client, so the window has to be pickable."""
+    from . import window as W
+    mons = W.monitors()
+    try:
+        wins = W.list_windows()
+    except Exception as e:
+        wins = []
+        svc.stats["last_error"] = "sources: " + repr(e)[:120]
+    me = (APP or "").lower()
+    wins = [w for w in wins if me not in (w["app"] or "").lower()]     # never offer ourselves
+    return {"current": svc.cfg.get("source", "game"),
+            "monitors": [{"index": i + 1, "rect": list(m),
+                          "size": [m[2] - m[0], m[3] - m[1]]} for i, m in enumerate(mons)],
+            "windows": wins,
+            "found": svc.grabber.describe().get("found", False)}
 
 
 @app.websocket("/ws")

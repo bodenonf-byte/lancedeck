@@ -69,6 +69,16 @@ unanswered, so the repo has no signing secrets yet.
   latest", or "could not reach GitHub". README privacy policy and the article name this
   single on-demand request.
 
+- Aimable capture (2026-09-28): the reader only ever looked for the MechWarrior Online window,
+  so a match watched from a caster — a stream in a browser, a spectator client, often on another
+  screen — could not be read at all. `config.source` now takes `game` (the default), `hwnd:<n>`,
+  `title:<text>` or `monitor:<n>`; `GET /api/sources` lists the open windows (title, exe, size,
+  screen) and the monitors; the picker sits on the calibration page. `window.list_windows`,
+  `find_by_hwnd`, `find_by_title` and `find_by_app` are the new plumbing, and a stale handle falls
+  back to the same exe's biggest window so closing and reopening the stream's browser does not
+  lose the aim. The 'only read while it is in front' rule now applies to the game only: a window
+  the user aimed at on purpose is read wherever it sits. Verified live on a YouTube MWO stream in
+  Opera — the grab came back as the spectator view and the reader pulled pilots out of it.
 - CPU, second pass (2026-09-27, same day): the first pass changed nothing measurable, because
   BOTH LOOPS WERE SATURATED — a lance-panel read takes ~0.55 s and a full-frame read ~1.8 s, so
   at the old intervals they ran back to back and `fps` never throttled anything. `_settled` never

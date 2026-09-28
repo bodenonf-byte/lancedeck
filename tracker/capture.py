@@ -23,6 +23,9 @@ class Grabber:
         self.cams: dict[int, object] = {}
         self.default_monitor = monitor
         self.window_mode = True          # capture the window's own surface; False = always the screen region
+        self.source = "game"             # game | hwnd:<n> | title:<text> | monitor:<n>
+        self.source_app = ""             # the exe of the window we were aimed at, to find it again
+        self.require_foreground = True   # only read the screen while the target is in front
         self.backend_now = "window"
         self._screen_until = 0.0
         self.hung_at = 0.0               # when a dxcam grab last hung (dxcam is then retired)
@@ -46,22 +49,74 @@ class Grabber:
         self.locate(force=True)
 
     # ── where ────────────────────────────────────────────────────────────────
+    def set_source(self, spec: str | None):
+        """What to read.  Changing it takes effect on the next grab."""
+        spec = (spec or "game").strip() or "game"
+        if spec != self.source:
+            self.source = spec
+            self.source_app = ""
+            self.locate(force=True)
+
     def locate(self, force: bool = False):
-        """Re-find the game every few seconds (it may start, move, or go windowed)."""
+        """Re-find what we read every few seconds (it may start, move, or go windowed).
+
+        `source` picks it:
+            game          the MechWarrior Online client — the default
+            hwnd:<n>      one particular window, chosen from the list of open windows
+            title:<text>  the first window whose title contains this text
+            monitor:<n>   a whole screen, whatever happens to be on it
+        A caster's match is not in the game client — it is a stream in a browser or a
+        spectator client, often on a second screen — so the reader has to be aimable.
+        """
         now = time.time()
         if not force and now < self._next_locate:
             return
         self._next_locate = now + 3.0
         mons = window.monitors()
-        gw = window.find_game()
+        spec = self.source
+        gw = None
+        whole_monitor = False
+        if spec.startswith("hwnd:"):
+            try:
+                gw = window.find_by_hwnd(int(spec[5:]))
+            except ValueError:
+                gw = None
+            if gw is None and self.source_app:
+                # closing and reopening the stream's browser gives it a new handle: the same
+                # program's biggest window is what the user meant
+                gw = window.find_by_app(self.source_app)
+        elif spec.startswith("title:"):
+            gw = window.find_by_title(spec[6:])
+        elif spec.startswith("monitor:"):
+            whole_monitor = True
+        else:
+            gw = window.find_game()
         self.game = gw
-        if gw is not None:
+        if gw is not None and spec != "game":
+            try:
+                self.source_app = next((w["app"] for w in window.list_windows() if w["hwnd"] == gw.hwnd), self.source_app)
+            except Exception:
+                pass
+        # the "only while it is in front" rule exists so an alt-tabbed fullscreen game never
+        # leaves us reading the desktop.  A window the user aimed at on purpose is different.
+        self.require_foreground = spec == "game"
+        if whole_monitor:
+            try:
+                idx = int(spec.split(":", 1)[1])
+            except ValueError:
+                idx = self.default_monitor
+            idx = min(max(1, idx), max(1, len(mons)))
+            self.mon_index = idx
+            self.mon_rect = mons[idx - 1] if mons else (0, 0, 1920, 1080)
+            self.win_rect = self.mon_rect
+        elif gw is not None:
             self.mon_index = gw.monitor_index; self.mon_rect = gw.monitor
             r = gw.rect; m = gw.monitor
             self.win_rect = (max(r[0], m[0]), max(r[1], m[1]), min(r[2], m[2]), min(r[3], m[3]))
         else:
-            # no game window: read NOTHING.  Falling back to the whole monitor used to OCR
-            # whatever was on the desktop (a browser with old screenshots) into the roster.
+            # the window we are aimed at is not there: read NOTHING.  Falling back to the
+            # whole monitor used to OCR whatever was on the desktop (a browser with old
+            # screenshots) into the roster.
             idx = min(max(1, self.default_monitor), max(1, len(mons)))
             self.mon_index = idx
             self.mon_rect = mons[idx - 1] if mons else (0, 0, 1920, 1080)
@@ -135,6 +190,7 @@ class Grabber:
 
     def describe(self) -> dict:
         return {"backend": self.backend_now, "monitor": self.mon_index, "monitor_rect": self.mon_rect,
+                "source": self.source, "found": self.win_rect is not None,
                 "window": self.game.title if self.game else None, "window_rect": self.win_rect,
                 "dxcam_hung_at": self.hung_at, "window_stale_at": self.stale_at}
 
@@ -174,7 +230,7 @@ class Grabber:
             self._screen_until = now + 10.0             # black, failed or frozen: exclusive fullscreen, use the screen for a while
         # the screen shows the game only while the game is the window in front; otherwise the
         # desktop (a browser, this chat) would be OCR'd into the roster.  Read nothing then.
-        if self.game is not None and not window.is_foreground(self.game.hwnd):
+        if self.require_foreground and self.game is not None and not window.is_foreground(self.game.hwnd):
             self.backend_now = "none"
             return None
         self.backend_now = self.backend
