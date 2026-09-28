@@ -28,6 +28,7 @@
       <button class="navbtn" data-view="lances">LANCE SETUP</button>
       <button class="navbtn" data-view="board">MY MECHS</button>
       <button class="navbtn" data-view="records">RECORDS</button>
+      <button class="navbtn" data-view="comp" title="the caster's view of a competitive match: both teams live, with the loadouts the caster has shown">COMPETITIVE</button>
       <a class="navbtn link" href="/calib" target="_blank">CALIBRATE</a>
       <div class="navopts">
         <label class="opt me" title="your pilot name as it shows in game — your frame is highlighted; click a pilot name to set it">PILOT<input type="text" id="meName" placeholder="your name" spellcheck="false"></label>
@@ -61,6 +62,20 @@
             <em id="recKey" title="your signing key's fingerprint: give it to friends so they can tell your bundles from a forgery"></em>
           </span></div>
         <div class="records" id="records"></div>
+      </section>
+      <section id="compView" class="view" hidden>
+        <div class="srcbar">
+          <label for="srcPick">READING</label>
+          <select id="srcPick" title="a caster's match is not in the game client: point the reader at the stream's window, or at a whole screen"></select>
+          <button class="btn ghost" id="srcRefresh" title="list the open windows again">REFRESH</button>
+          <span id="srcNote"></span>
+        </div>
+        <div class="compstrip" id="compStrip"></div>
+        <div class="compprog" id="compProg"></div>
+        <div class="compteams">
+          <div class="compcol left" id="compLeft"></div>
+          <div class="compcol right" id="compRight"></div>
+        </div>
       </section>
       <section id="board" class="view" hidden>
         <div class="teamhead me"><h3>MY MECHS</h3><span id="myTotal"></span></div>

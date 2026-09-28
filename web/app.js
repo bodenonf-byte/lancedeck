@@ -12,7 +12,7 @@ Promise.all([loadAssets(), fetch("/static/roles.json").then(r => r.json()).then(
 // ── options, remembered per browser ──────────────────────────────────────────────────
 const prefs = (() => { try { return JSON.parse(localStorage.getItem("mwo-tracker") || "{}"); } catch (e) { return {}; } })();
 function savePrefs() { try { localStorage.setItem("mwo-tracker", JSON.stringify(prefs)); } catch (e) {} }
-const VIEWS = {lances: "lancesView", board: "board", records: "recordsView"};
+const VIEWS = {lances: "lancesView", board: "board", records: "recordsView", comp: "compView"};
 function applyPrefs() {
   document.documentElement.dataset.theme = prefs.theme || "dark";
   const view = VIEWS[prefs.view] ? prefs.view : "lances";
@@ -23,7 +23,48 @@ function applyPrefs() {
   paintMap(lastMap);
   if (view === "records") loadRecords();
   if (view === "board") loadMyMechs();
+  if (view === "comp") loadSources();
 }
+
+// ── what the reader is aimed at ──────────────────────────────────────────────────────────
+// The game client is the default, but a caster's match is a stream in a browser or a
+// spectator client, often on another screen, so the window has to be pickable.
+async function loadSources() {
+  const pick = document.getElementById("srcPick"), note = document.getElementById("srcNote");
+  if (!pick) return;
+  let d;
+  try {
+    d = await fetch("/api/sources").then(r => r.json());
+  } catch (e) {
+    note.textContent = "the helper did not answer"; return;
+  }
+  const opt = (v, label, sel) => `<option value="${v}"${sel ? " selected" : ""}>${escapeHtml(label)}</option>`;
+  const cur = d.current || "game";
+  let html = opt("game", "MechWarrior Online — the game client", cur === "game");
+  if (d.windows.length) {
+    html += '<optgroup label="a window">';
+    for (const w of d.windows) {
+      html += opt(`hwnd:${w.hwnd}`, `${w.title.slice(0, 64)} — ${w.app} (${w.size[0]}×${w.size[1]}, screen ${w.monitor})`,
+                  cur === `hwnd:${w.hwnd}`);
+    }
+    html += "</optgroup>";
+  }
+  html += '<optgroup label="a whole screen">';
+  for (const m of d.monitors) html += opt(`monitor:${m.index}`, `Screen ${m.index} (${m.size[0]}×${m.size[1]})`, cur === `monitor:${m.index}`);
+  html += "</optgroup>";
+  if (!pick.querySelector(`option[value="${cur}"]`) && cur !== "game") html += opt(cur, `${cur} (not open)`, true);
+  pick.innerHTML = html;
+  note.textContent = d.found ? "" : "that window is not open — pick another";
+  note.className = d.found ? "" : "warn";
+}
+document.getElementById("srcPick").onchange = async e => {
+  const note = document.getElementById("srcNote");
+  note.textContent = "aiming…"; note.className = "";
+  await fetch("/api/config", {method: "POST", headers: {"Content-Type": "application/json"},
+                              body: JSON.stringify({source: e.target.value})});
+  setTimeout(loadSources, 600);
+};
+document.getElementById("srcRefresh").onclick = loadSources;
 document.querySelectorAll(".navbtn[data-view]").forEach(b => b.onclick = () => { if (b.dataset.view !== prefs.view) undoable.clear(); prefs.view = b.dataset.view; savePrefs(); applyPrefs(); });
 document.getElementById("themeBtn").onclick = () => { prefs.theme = (prefs.theme || "dark") === "dark" ? "normal" : "dark"; savePrefs(); applyPrefs(); };
 document.getElementById("optMap").onchange = e => { prefs.mapbg = e.target.checked; savePrefs(); applyPrefs(); };
@@ -248,6 +289,114 @@ function renderTeam(id, slots, enemy, d) {
 function renderLances(d) {
   renderTeam("lancesMine", d.mine || [], false, d);
   renderTeam("lancesEnemy", d.enemy || [], true, d);
+}
+
+// ── COMPETITIVE: the caster's client, both teams live with the loadouts it has shown ──
+const HP_TYPES = {E: "energy", B: "ballistic", M: "missile", S: "support"};
+function compPilot(p, hlName) {
+  const hp = p.alive && p.health != null ? p.health : (p.alive ? null : 0);
+  const pic = p.code ? (cutOf(p) || picOf(p)) : null;
+  const st = p.stats;
+  const cls = p.cls || "Unknown";
+  const hl = hlName && p.pilot === hlName;
+  return `<div class="cp ${p.alive ? "" : "dead"} ${hl ? "hl" : ""} c-${cls}" style="--arm: var(--${cls.toLowerCase()})">
+    <div class="cp-pic">${pic ? `<img src="${pic}" alt="">` : `<span>${p.code || "?"}</span>`}${hl ? '<i class="cp-eye" title="the caster is on this pilot">◉</i>' : ""}</div>
+    <div class="cp-body">
+      <div class="cp-head"><b class="cp-name">${escapeHtml(p.pilot)}</b>
+        <span class="cp-mech">${p.code ? `${escapeHtml(p.name || "")} <a class="cp-code" href="${buildUrl(p)}" target="_blank" rel="noopener" title="build guides">${p.code}${p.variant ? "-" + escapeHtml(p.variant) : ""}</a>` : "mech not read"}${p.tons ? ` <em>${p.tons}t</em>` : ""}</span>
+        <span class="cp-ka" title="kills / assists">${p.kills != null ? p.kills : "–"} <i>K</i> ${p.assists != null ? p.assists : "–"} <i>A</i></span></div>
+      <div class="hp cp-hp"><i style="width:${hp == null ? 0 : hp}%"></i><b>${!p.alive ? "DESTROYED" : hp == null ? "—" : hp + "%"}</b></div>
+      ${st ? `<div class="cp-load" title="${escapeHtml(st.weapons.map(w => (w.n > 1 ? w.n + "× " : "") + w.name).join(", "))}">${st.weapons.map(w => `<span>${w.n > 1 ? `<b>${w.n}×</b> ` : ""}${escapeHtml(w.name)}</span>`).join("")}</div>
+      <div class="cp-stats">
+        <span title="damage of one full alpha strike"><i>α</i>${st.alpha}</span>
+        <span title="heat of one full alpha"><i>heat</i>${st.heat}</span>
+        <span title="sustained damage per second, all weapons cycling"><i>dps</i>${st.dps}</span>
+        <span title="damage-weighted optimal range"><i>range</i>${st.range}m</span>
+        <span class="band ${st.band}">${st.band.toUpperCase()}</span>
+        <span class="types">${Object.entries(st.types).filter(([, n]) => n).map(([t, n]) => `<i class="t-${t}" title="${HP_TYPES[t]}">${n}${t}</i>`).join("")}</span>
+        ${st.unknown.length ? `<span class="unk" title="not in data/weapons.json: ${escapeHtml(st.unknown.join(", "))}">?</span>` : ""}
+      </div>` : `<div class="cp-load none">loadout not shown yet</div>`}
+    </div>
+  </div>`;
+}
+function compTeam(id, t, side, hl) {
+  const alive = t.pilots.filter(p => p.alive).length;
+  const withLoad = t.pilots.filter(p => p.stats);
+  const alpha = withLoad.reduce((a, p) => a + p.stats.alpha, 0), dps = withLoad.reduce((a, p) => a + p.stats.dps, 0);
+  document.getElementById(id).innerHTML = `
+    <div class="teamhead ${side === "left" ? "blue" : "red"}">
+      <h3>${escapeHtml(t.name || (side === "left" ? "LEFT TEAM" : "RIGHT TEAM"))}${t.tag && t.tag !== t.name ? ` <small>${escapeHtml(t.tag)}</small>` : ""}</h3>
+      <span>${alive} / ${t.pilots.length} ALIVE · ${t.tons} T${t.kills ? ` · ${t.kills} KILLS` : ""}${withLoad.length ? ` · α ${Math.round(alpha)} · ${Math.round(dps)} DPS <em>(${withLoad.length} of ${t.pilots.length} loadouts)</em>` : ""}</span>
+    </div>
+    ${t.pilots.map(p => compPilot(p, hl && hl.side === side ? hl.pilot : "")).join("")}`;
+}
+function renderComp(c) {
+  const strip = document.getElementById("compStrip");
+  if (!c) {
+    strip.innerHTML = '<div class="empty">Watch a match from the caster (spectator) client: both teams, their health, kills and assists follow the side tables; each pilot\'s weapons and their alpha, heat, DPS and range appear once the caster highlights them.</div>';
+    document.getElementById("compLeft").innerHTML = ""; document.getElementById("compRight").innerHTML = "";
+    return;
+  }
+  const capOf = k => `<i class="cap ${k.side || "none"}" title="${k.side ? (k.side === "left" ? c.left.name : c.right.name) + " holds " + k.name : k.name + ": nobody"}">${k.name[0]}</i>`;
+  strip.innerHTML = `
+    <div class="cs-side blue"><b>${escapeHtml(c.left.tag || c.left.name || "LEFT")}</b>${c.left.series != null ? `<em>series ${c.left.series}</em>` : ""}</div>
+    <div class="cs-mid">
+      <span class="cs-score blue">${c.left.score != null ? c.left.score : "–"}</span>
+      <span class="cs-clock">${c.clock || "--:--"}</span>
+      <span class="cs-score red">${c.right.score != null ? c.right.score : "–"}</span>
+    </div>
+    <div class="cs-side red"><b>${escapeHtml(c.right.tag || c.right.name || "RIGHT")}</b>${c.right.series != null ? `<em>series ${c.right.series}</em>` : ""}</div>
+    ${c.caps.length ? `<div class="cs-caps" title="capture points, coloured by holder">${c.caps.map(capOf).join("")}</div>` : ""}
+    <div class="cs-age">${c.frames} frames · last ${new Date(c.updated * 1000).toLocaleTimeString()}</div>`;
+  renderProgress(c);
+  compTeam("compLeft", c.left, "left", c.highlight);
+  compTeam("compRight", c.right, "right", c.highlight);
+}
+
+// ── how the points are going, on the modes that score ───────────────────────────────────
+// The two numbers matter less than their slope: who is gaining, how fast, and where the
+// clock running out leaves them. Hidden on modes that do not score.
+function renderProgress(c) {
+  const box = document.getElementById("compProg");
+  const p = c && c.progress;
+  if (!p || !p.points || p.points.length < 2) { box.innerHTML = ""; box.hidden = true; return; }
+  box.hidden = false;
+  const pts = p.points.filter(q => q.t != null && (q.l != null || q.r != null));
+  const W = 600, H = 120, PAD = 4;
+  let chart = "";
+  if (pts.length >= 2) {
+    const ts = pts.map(q => q.t);
+    const t0 = Math.max(...ts), t1 = Math.min(...ts);      // the clock counts down
+    const top = Math.max(10, ...pts.map(q => Math.max(q.l || 0, q.r || 0)));
+    const x = t => t0 === t1 ? W : PAD + (t0 - t) / (t0 - t1) * (W - 2 * PAD);
+    const y = v => H - PAD - (v / top) * (H - 2 * PAD);
+    const line = k => pts.filter(q => q[k] != null).map((q, i) => `${i ? "L" : "M"}${x(q.t).toFixed(1)},${y(q[k]).toFixed(1)}`).join("");
+    chart = `<svg class="progchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img"
+        aria-label="scores over the match">
+      <path d="${line("l")}" class="pl" fill="none"/><path d="${line("r")}" class="pr" fill="none"/>
+    </svg>`;
+  }
+  const mm = s => s == null ? "–" : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const rate = k => p.rate[k] == null ? "–" : `${p.rate[k] > 0 ? "+" : ""}${p.rate[k]}`;
+  const proj = k => p.projected[k] == null ? "–" : p.projected[k];
+  const winner = p.projected.left != null && p.projected.right != null
+    ? (p.projected.left === p.projected.right ? "dead level"
+       : (p.projected.left > p.projected.right ? `${escapeHtml(c.left.tag || c.left.name || "LEFT")} by ${p.projected.left - p.projected.right}`
+                                               : `${escapeHtml(c.right.tag || c.right.name || "RIGHT")} by ${p.projected.right - p.projected.left}`))
+    : "";
+  box.innerHTML = `
+    <div class="pg-head">
+      <b>POINTS</b>
+      <span class="pg-lead ${p.lead > 0 ? "blue" : p.lead < 0 ? "red" : ""}">${p.lead == null ? "" : (p.lead === 0 ? "level" : (p.lead > 0 ? "+" : "") + p.lead)}</span>
+      <span class="pg-caps" title="capture points held">${p.caps.left} <i>caps</i> ${p.caps.right}</span>
+      <span class="pg-clock" title="time left">${mm(p.seconds_left)}</span>
+    </div>
+    ${chart}
+    <div class="pg-foot">
+      <span class="blue">${rate("left")}<i>/min</i></span>
+      <span class="pg-proj" title="where this pace lands when the clock runs out">at the whistle <b class="blue">${proj("left")}</b> – <b class="red">${proj("right")}</b>${winner ? ` · ${winner}` : ""}</span>
+      <span class="red">${rate("right")}<i>/min</i></span>
+    </div>`;
 }
 
 // ── RECORDS: the final screen of every match, newest first ──────────────────────────
@@ -527,6 +676,7 @@ function apply(d) {
   }
   renderBalance(d);
   renderLances(d);
+  renderComp(d.comp);
   renderFooter(d);
   if (d.records_v != null && d.records_v !== recordsV) { recordsV = d.records_v; if ((prefs.view || "lances") === "records") loadRecords(); }
   lastMap = d.map || ""; paintMap(lastMap);

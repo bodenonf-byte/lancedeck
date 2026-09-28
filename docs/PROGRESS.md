@@ -69,6 +69,18 @@ unanswered, so the repo has no signing secrets yet.
   latest", or "could not reach GitHub". README privacy policy and the article name this
   single on-demand request.
 
+- Competitive / caster mode (2026-09-28, committed): `tracker/spectate.py` reads the caster
+  (spectator) client — both team tables, the clock, the two scores, the Conquest capture points,
+  and the highlight box's loadout — and `tracker/weapons.py` + `data/weapons.json` turn a loadout
+  into alpha, heat, DPS and optimal range. New COMPETITIVE view with a source picker, both teams
+  as plates, and a POINTS panel: lead, caps held, a two-line chart of the scores, points per
+  minute a side and where the pace lands at the whistle (hidden on modes that do not score).
+  Verified live on a YouTube stream of a real match. Three bugs found by comparing the board with
+  the stream and fixed: a series is the same sixteen people swapping sides each map, so the new
+  match test now judges each side on its own and treats a clock that went back up as a new map;
+  the table row (not the name) identifies a pilot, since one row read two ways made a ninth pilot
+  on an eight-strong team; and similar names no longer collapse two pilots into one.
+  **Untested against a real caster client's own layout** — everything so far is from a stream.
 - Aimable capture (2026-09-28): the reader only ever looked for the MechWarrior Online window,
   so a match watched from a caster — a stream in a browser, a spectator client, often on another
   screen — could not be read at all. `config.source` now takes `game` (the default), `hwnd:<n>`,

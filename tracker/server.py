@@ -38,6 +38,7 @@ from .match import build, TeamState
 from .mechdb import MechDB
 from .ocr import Reader, Line
 from .roster import Roster
+from . import spectate
 from . import vault
 
 from . import paths
@@ -58,9 +59,18 @@ class Service:
             self.cfg["donate_url"] = "https://ko-fi.com/johnson_b"
         self.db = MechDB()
         dml = bool(self.cfg.get("ocr_dml", False))
-        try:                                            # stay out of the game's way: below-normal priority
+        # Stay out of the game's way: below-normal priority, so the OCR threads yield to MWO
+        # whenever the cores are contended.  The handle types MATTER — without them ctypes
+        # passes the current-process pseudo-handle as a 32-bit int and the call fails with
+        # ERROR_INVALID_HANDLE (6), silently, which is what it did from the day it was written.
+        try:
             import ctypes
-            ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x00004000)
+            k = ctypes.windll.kernel32
+            k.GetCurrentProcess.restype = ctypes.c_void_p
+            k.SetPriorityClass.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+            BELOW_NORMAL = 0x00004000
+            if not k.SetPriorityClass(k.GetCurrentProcess(), BELOW_NORMAL):
+                print(f"{APP}: could not lower the process priority (error {k.GetLastError()})", flush=True)
         except Exception:
             pass
         # ONE session for both loops: two DirectML sessions running at once take the GPU
@@ -90,6 +100,7 @@ class Service:
         self._full_quiet = 0
         self.roster = Roster()
         self.roster.memory = load_memory()
+        self.comp = spectate.CompRoster()          # the caster's view of a competitive match, when that is what is on screen
         self.grabber.window_mode = self.cfg.get("capture", "window") != "screen"
         self.grabber.set_source(self.cfg.get("source", "game"))
         self.assets_v = 0              # bumps when a picture is harvested, so the page refetches the list
@@ -144,11 +155,32 @@ class Service:
         t0 = time.time()
         with self.ocr_lock:
             lines = self.reader.read(img, float(self.cfg.get("ocr_scale", 1.0)))
+        if self._apply_comp(lines, img):
+            # the caster's tables are not a drop screen: the ordinary roster keeps what it had
+            with self.lock:
+                self.last_frame = img; self.last_lines = lines
+                self.stats["frames"] += 1; self.stats["ocr_ms"] = round((time.time() - t0) * 1000); self.stats["last_kind"] = "caster"; self.busy_until = time.time() + self.BUSY_FOR
+            return self.state
         raw = build(lines, img, self.db, self.cfg, source)
         if source == "live":
             self._sample(img, lines, raw)
             self._harvest(img, lines, raw)
         return self._apply(raw, img, lines, True, round((time.time() - t0) * 1000))
+
+    def _apply_comp(self, lines: list[Line], img: Image.Image) -> bool:
+        """The same OCR lines read as the caster's client.  True when the frame was the caster's
+        two tables (a highlight box alone folds in but leaves the frame to the ordinary reader)."""
+        try:
+            fr = spectate.build(lines, img, self.db)
+        except Exception as e:
+            self.stats["last_error"] = "comp: " + repr(e)[:160]; return False
+        if fr.kind == "none":
+            return False
+        with self.lock:
+            if self.comp.merge(fr):
+                self.version += 1
+            self.stats["last_comp"] = fr.kind
+        return fr.kind == "comp"
 
     def _harvest(self, img, lines, raw):
         """Pictures from the player's own screen: mech portraits off the MechLab home screen,
@@ -229,14 +261,14 @@ class Service:
 
     def reset(self):
         with self.lock:
-            self.roster.clear(); self.version += 1
+            self.roster.clear(); self.comp.clear(); self.version += 1
             self.state = TeamState("none", [], [], "reset", time.time(), 0, 0, "roster cleared")
 
-    # Pace.  While a match is on (a HUD, scoreboard or target read within BUSY_FOR seconds)
-    # both loops run at the configured rate.  The rest of the time — the MechLab, the lobby,
-    # the store, most of the hours the game is open — nothing on screen is worth reading at
-    # that rate, so the panel loop drops to IDLE_FPS and the full loop to IDLE_FULL_EVERY.
-    # The first drop-screen or HUD read brings the full rate back at once.
+    # Pace.  While a match is on (a HUD, scoreboard, target or caster read within BUSY_FOR
+    # seconds) both loops run at the configured rate.  The rest of the time — the MechLab, the
+    # lobby, the store, most of the hours the game is open — nothing on screen is worth
+    # reading at that rate, so the panel loop drops to IDLE_FPS and the full loop to
+    # IDLE_FULL_EVERY.  The first drop-screen or HUD read brings the full rate back at once.
     BUSY_FOR = 30.0
     IDLE_FPS = 0.25
     IDLE_FULL_EVERY = 4.0
@@ -334,7 +366,12 @@ class Service:
             dt = 1.0 / max(0.5, float(self.cfg.get("fps", 6)))
             if self._idle():
                 dt = max(dt, 1.0 / self.IDLE_FPS)
-            time.sleep(max(0.0, dt - (time.time() - t0)))
+            took = time.time() - t0
+            # the same rule as the full loop, and for the same reason: a tick that outlasts
+            # its interval (panel ~0.2 s + the target panel ~0.5 s on alternate ticks, against
+            # a 0.5 s interval at fps 2) is otherwise taken back to back for the whole match,
+            # with four OCR threads pinned and the GIL contended against the full loop
+            time.sleep(max(0.0, dt - took, 0.5 * took))
 
     def frame_png(self, boxes: bool) -> bytes | None:
         with self.lock:
@@ -358,13 +395,15 @@ class Service:
         self.stats["target"] = self.grabber.describe(); self.stats["screen"] = list(self.grabber.size())
         if self.state is None:
             return {"kind": "none", "mine": [], "enemy": [], "source": "none", "ts": 0, "note": "no frame yet", "map": "",
-                    "version": self.version, "stats": self.stats, "live": self.live, "my_name": self.cfg.get("my_name", "")}
+                    "version": self.version, "stats": self.stats, "live": self.live, "my_name": self.cfg.get("my_name", ""),
+                    "comp": self.comp.as_dict()}
         d = self.state.as_dict(); d["version"] = self.version; d["stats"] = self.stats; d["live"] = self.live
         d["result"] = getattr(self.state, "result", ""); d["mode"] = getattr(self.state, "mode", "")
         d["frozen"] = getattr(self.state, "frozen", False)
         d["my_name"] = self.cfg.get("my_name", ""); d["assets_v"] = self.assets_v
         d["donate_url"] = self.cfg.get("donate_url", ""); d["app"] = APP; d["app_version"] = VERSION
         d["records_v"] = getattr(self, "records_v", 0)
+        d["comp"] = self.comp.as_dict()
         return d
 
 
@@ -887,8 +926,8 @@ async def set_config(body: dict):
 def sources():
     """What the reader can be aimed at: the game, any open window, or a whole screen.
 
-    A match watched from a caster is a stream in a browser or a spectator client, not the
-    game client, so the window has to be pickable."""
+    A caster's match is a stream in a browser or a spectator client, not the game client,
+    so the window has to be pickable."""
     from . import window as W
     mons = W.monitors()
     try:
@@ -897,7 +936,9 @@ def sources():
         wins = []
         svc.stats["last_error"] = "sources: " + repr(e)[:120]
     me = (APP or "").lower()
-    wins = [w for w in wins if me not in (w["app"] or "").lower()]     # never offer ourselves
+    # never offer ourselves — neither the app's own window nor a browser sitting on our page,
+    # which would read the board back into itself
+    wins = [w for w in wins if me not in (w["app"] or "").lower() and me not in (w["title"] or "").lower()]
     return {"current": svc.cfg.get("source", "game"),
             "monitors": [{"index": i + 1, "rect": list(m),
                           "size": [m[2] - m[0], m[3] - m[1]]} for i, m in enumerate(mons)],
