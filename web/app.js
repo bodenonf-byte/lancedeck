@@ -23,12 +23,13 @@ function applyPrefs() {
   paintMap(lastMap);
   if (view === "records") loadRecords();
   if (view === "board") loadMyMechs();
-  if (view === "comp") loadSources();
 }
 
 // ── what the reader is aimed at ──────────────────────────────────────────────────────────
 // The game client is the default, but a caster's match is a stream in a browser or a
-// spectator client, often on another screen, so the window has to be pickable.
+// spectator client, often on another screen, so the window has to be pickable.  This lives
+// in the side bar and not in one view, because it decides what EVERY view is looking at:
+// aimed at a stream, LANCE SETUP quietly fills with the streamer's team instead of yours.
 async function loadSources() {
   const pick = document.getElementById("srcPick"), note = document.getElementById("srcNote");
   if (!pick) return;
@@ -54,8 +55,14 @@ async function loadSources() {
   html += "</optgroup>";
   if (!pick.querySelector(`option[value="${cur}"]`) && cur !== "game") html += opt(cur, `${cur} (not open)`, true);
   pick.innerHTML = html;
-  note.textContent = d.found ? "" : "that window is not open — pick another";
-  note.className = d.found ? "" : "warn";
+  // say plainly when the helper is not on the game, because every view is then showing
+  // whatever that window holds
+  const onGame = cur === "game";
+  const label = pick.closest(".opt");
+  if (label) label.classList.toggle("aimed", !onGame);
+  note.textContent = !d.found ? "that window is not open — pick another"
+                    : onGame ? "" : "not the game — every view reads this";
+  note.className = d.found ? (onGame ? "" : "aimed") : "warn";
 }
 document.getElementById("srcPick").onchange = async e => {
   const note = document.getElementById("srcNote");
@@ -65,6 +72,12 @@ document.getElementById("srcPick").onchange = async e => {
   setTimeout(loadSources, 600);
 };
 document.getElementById("srcRefresh").onclick = loadSources;
+loadSources();
+// the list goes stale as windows open and close; never while the user is choosing
+setInterval(() => {
+  const p = document.getElementById("srcPick");
+  if (p && document.activeElement !== p) loadSources();
+}, 30000);
 document.querySelectorAll(".navbtn[data-view]").forEach(b => b.onclick = () => { if (b.dataset.view !== prefs.view) undoable.clear(); prefs.view = b.dataset.view; savePrefs(); applyPrefs(); });
 document.getElementById("themeBtn").onclick = () => { prefs.theme = (prefs.theme || "dark") === "dark" ? "normal" : "dark"; savePrefs(); applyPrefs(); };
 document.getElementById("optMap").onchange = e => { prefs.mapbg = e.target.checked; savePrefs(); applyPrefs(); };

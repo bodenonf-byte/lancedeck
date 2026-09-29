@@ -69,6 +69,12 @@ unanswered, so the repo has no signing secrets yet.
   latest", or "could not reach GitHub". README privacy policy and the article name this
   single on-demand request.
 
+- Source picker moved to the side bar (2026-09-29): it was only in the COMPETITIVE view, but the
+  setting is global — aimed at a stream, LANCE SETUP quietly filled with the streamer's team and
+  there was no way to tell, or to change it back, without going to the competitive view. It now
+  sits under the nav where every view can see it, turns amber with "not the game — every view
+  reads this" whenever it is aimed anywhere else, and refreshes its window list every 30 s (never
+  while the list is open).
 - Competitive / caster mode (2026-09-28, committed): `tracker/spectate.py` reads the caster
   (spectator) client — both team tables, the clock, the two scores, the Conquest capture points,
   and the highlight box's loadout — and `tracker/weapons.py` + `data/weapons.json` turn a loadout
