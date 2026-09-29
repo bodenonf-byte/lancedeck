@@ -734,3 +734,8 @@ footer.bottom { position: static; display: grid; grid-template-columns: 1fr 300p
 .opt.src #srcNote.warn { color: var(--red); }
 .opt.src #srcNote.aimed { color: var(--amber); }
 .opt.src.aimed select { border-color: var(--amber); color: var(--amber); }
+
+/* a nav entry that is not finished work yet */
+.navbtn small { display: block; margin-top: 1px; font-size: 9px; font-weight: 700;
+  letter-spacing: .16em; color: var(--amber); opacity: .75; }
+.navbtn.on small { opacity: 1; }
