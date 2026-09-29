@@ -8,7 +8,7 @@ import os
 import sys
 
 APP = "LanceDeck"
-VERSION = "0.9.4"
+VERSION = "0.9.5"
 REPO = "bodenonf-byte/lancedeck"                       # GitHub repository (owner/name)
 RELEASES_URL = f"https://github.com/{REPO}/releases"   # where a newer build lives
 LATEST_API = f"https://api.github.com/repos/{REPO}/releases/latest"

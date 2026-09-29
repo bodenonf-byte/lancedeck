@@ -33,6 +33,22 @@ levers left both cost a feature: skip the target-panel OCR when no target is up 
 needs a cheap "is the panel drawn" test), and read the full frame less often while the HUD
 is on screen (risks missing a quick TAB or Q peek).
 
+## State on 2026-09-29
+
+**Released: v0.9.5** — the CPU pass, the records vault, aimable capture, the COMPETITIVE
+prototype, CHECK FOR UPDATES, the app icon and the mech cut-out fix. Still unsigned: the SignPath
+Foundation application (submitted 2026-09-12) has never been answered.
+
+**Shipped without the vault being tested on real records** — the 0.9.5 checklist asked for that
+and the author chose to release anyway. First thing to try on a quiet evening: BACKUP, IMPORT the
+bundle back with adopt, then a SHARE bundle imported as a foreign pilot, and check the background
+verdicts.
+
+**Next**
+
+- The COMPETITIVE view has only ever read a stream. Try it against the spectator client itself.
+- Colonel ONeill once showed last map's mech; believed fixed by the new-match detection, unconfirmed.
+- Caster frames are not in `SAMPLE_KINDS`, so a bad comp read cannot be diagnosed afterwards.
 ## State on 2026-09-17
 
 **Released:** v0.9.4 (2026-09-15) — build-guide link fix, QUIT button, faster and safer
